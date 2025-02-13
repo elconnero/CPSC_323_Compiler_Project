@@ -1,0 +1,6 @@
+
+Opt and List checker:
+- Function to ensure the proper amount of "$$" are in source.
+- Function's of integrity checks for Opt Function, Opt Declaration, and Statement list 
+
+function function 
