@@ -28,31 +28,51 @@ def user_input ():
         if len(user_string) != 0: #I do not think we need if statement above, however, this is not a good if statement either and will need to be changed out. 
             string_check = True
         else:
-            user_string = input("Error #1: Code needs to start with $$ to begin compile.\nEnter what you would like to say.\nEnter Here: ")
+            user_string = input("Error #1:\nCode needs to start with $$ to begin compile.\nEnter what you would like to say.\nEnter Here: ")
     return user_string
+
+def token_giver(code):
+        types = {1: "KEYWORD", 2: "OPERATOR", 3: "SEPARATOR", 4: "UNDEFINED"}
+        return types.get(code, "UNKNOWN")
 
 def lex_hub(user_input):
     
     # Vars. for this function
-    
+    token = ""
+    token_queue = deque()
 
     # Creating queue to put user_string in
     queue = deque(user_input.strip())
 
     # Process characters from the queue
-    token = ""
     while queue:
         char = queue.popleft()  # Get the first character from the queue
         if char == " " or char in seperator or char in operator:
-            if token:  # Only output if there was a token collected
-                print(token)
-                token = ""  # Reset the token for the next word
+            if token:
+                if token in keywords:                                                   
+                    token_queue.append((token, token_giver(1)))                  
+                else:
+                    token_queue.append((token, token_giver(4)))                  
+                    token = ""  
+            if char in operator:
+                token_queue.append((token, token_giver(2)))                  
+            elif char in seperator: #Gonna need to get more in depth I fear. 
+                token_queue.append((token, token_giver(3)))                  
         else:
-            token += char  # Add character to current token
+            token += char                                                 # Adds character to current token
 
     # Print the last token if there is one left
     if token:
-        print(token)
+        if token:
+            if token in keywords:                                                   
+                token_queue.append((token, token_giver(1)))                  
+            else:
+                token_queue.append((token, token_giver(4)))                  
+                token = ""               
+    else:
+        token += char 
+    
+    print(token_queue)
 
 
 def main():
