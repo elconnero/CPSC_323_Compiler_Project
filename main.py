@@ -13,7 +13,7 @@ from collections import deque
 #               0       1      2       3         4       5         6       7          8          9
 keywords = {"integer", "if", "else", "endif", "while", "return", "scan", "print", "function", "scan"}
 #             0    1    2    3    4   5   6 
-seperator = {",", "$", "(", ")", ";","{","}"}
+seperator = {",", "$", "(", ")", ";","{","}","."}
 #            0    1    2    3    4    5    6    7
 operator = {"+", "-", "*", "/", "%", "<", ">", "=",}
 #            0     1
@@ -35,7 +35,8 @@ def token_giver(code):
         types = {1: "KEYWORD", 2: "OPERATOR", 3: "SEPARATOR", 4: "UNDEFINED"}
         return types.get(code, "UNKNOWN")
 
-def lex_hub(user_input):
+
+def queue_hub(user_input):
     
     # Vars. for this function
     token = ""
@@ -55,9 +56,9 @@ def lex_hub(user_input):
                     token_queue.append((token, token_giver(4)))                  
                     token = ""  
             if char in operator:
-                token_queue.append((token, token_giver(2)))                  
+                token_queue.append((char, token_giver(2)))                  
             elif char in seperator: #Gonna need to get more in depth I fear. 
-                token_queue.append((token, token_giver(3)))                  
+                token_queue.append((char, token_giver(3)))                  
         else:
             token += char                                                 # Adds character to current token
 
@@ -72,7 +73,7 @@ def lex_hub(user_input):
     else:
         token += char 
     
-    print(token_queue)
+    array = list(token_queue)
 
 
 def main():
