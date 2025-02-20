@@ -73,12 +73,14 @@ def queue_hub(user_input):
     else:
         token += char 
     
-    array = list(token_queue)
+    return list(token_queue)
 
 
 def main():
     users_input = user_input()
-    lex_hub(users_input)
+    array = queue_hub(users_input)
+    for token in array:
+        print(token)
 
 if __name__ ==  "__main__":
     main()
