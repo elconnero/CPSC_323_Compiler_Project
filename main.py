@@ -77,6 +77,18 @@ def queue_hub(user_input):
     
     return list(token_queue)
 
+def operator_smasher(token):
+    x = 0
+    while x < len(token) -1 :
+        if token[x][1] == 'OPERATOR' and token[x+1][1] == 'OPERATOR':
+            smash = (token[x][0] + token[x+1][0], 'OPERATOR')
+            token[x] = smash
+            del token[x+1]
+        else:
+            x+=1
+    return token
+
+
     #FSM
 class id_fsm:
     def __init__(self):
@@ -152,8 +164,9 @@ class id_fsm:
 def main():
     users_input = user_input()
     token_record = queue_hub(users_input)
+    refined_token = operator_smasher(token_record)
     #lex_hub(token_record)
-    for token in token_record:
+    for token in refined_token:
         print(token)
 
 
@@ -161,7 +174,7 @@ def main():
     # example = "1337"
     # fsm = id_fsm()
     # result = all(fsm.transition(char, idx, len(example)) for idx, char in enumerate(example))
-    # print("Valid Identifier:", result)  # Should return True
+    # print("Valid Identifier:", result)  
 
 
     
