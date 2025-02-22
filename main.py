@@ -20,6 +20,7 @@ reserved_words = {
 #            0     1
 "comment":["[*", "*]"]
 }
+
 #Function Libs
 def user_input ():
     string_check =False
@@ -77,43 +78,93 @@ def queue_hub(user_input):
     return list(token_queue)
 
     #FSM
-    class id_fsm:
-        def __init__(self):
-            self.status = {
-                #"intaking first char": self.first_state,# Might not need this here, might make it its own FSM.
-                "crossroad": self.crossroad,
-                "digit": self.found_digit,
-                "letter": self.found_letter,
-                "underScore": self.found__,
-                "id": self.id_found
-            }
-            self.current_state = "pending"
+class id_fsm:
+    def __init__(self):
+        self.status = {
+            #"first state": self.first_state,# Might not need this here, might make it its own FSM. ## Feeling more confident we might not need because "def transition" sort of does state 1 already.
+            "crossroad": self.crossroad,
+            "digit": self.found_digit,
+            "letter": self.found_letter,
+            "underScore": self.found__,
+            "id": self.id_found
+        }
+        self.current_state = "crossroad"
 
-        def transition(self, status):
-            if status == True: #This is most likely not it, but just gonna leave this hear. 
-                self.current_state = self.states[self.current_state](status)
-            else:
-                return False
+    def transition(self, status, index, element_len): # can we techni // Not sure if needed, but really trying to see if having the len of element will be important to the fsr.
+        if self.current_state in self.status:
+            return self.status[self.current_state](status, index, element_len)
+        return False
+        
+    def crossroad(self, status, index, element_len):
 
-        def crossroad(self, status):
-            if self.is_alpha():
-                self.current_state = "letter"
-                return self.current_state
-            elif self.isdigit():
-                self.current_state = "digit"
-                return self.current_state
-            else: #Might need to change this and have it be more specific for the underscore and make else: flat out return false or something. 
-                self.current_state = "underScore"
-                return self.current_state
+        if index == 0:
+            if status.isalpha():
+                return True
+            return False
 
+        if status.isalpha():
+            self.current_state = "letter"
+            return True
+        elif status.isdigit():
+            self.current_state = "digit"
+            return True
+        elif status == "_": 
+            self.current_state = "underScore"
+            return True
+        else:
+            return False
 
+    def found_digit(self, status, index, element_len):
+        self.current_state = "id"
+        return True
 
+    def found_letter(self, status, index, element_len):
+        self.current_state = "id"
+        return True
+
+    def found__(self, status, index, element_len):
+        self.current_state = "id"
+        return True
+
+    def id_found(self, status, index, element_len):
+        if index >= element_len:
+            return True
+        return self.crossroad(status, index, element_len)
+
+#def lex_hub(token_record):
+    #count = 0
+    # for loop for len of list
+        # If "undefined":
+            #for loop to figure out len of str
+                 #if first element .is_alpha()
+                    #id_fsm
+                 #elif first element .isdigit()
+                    ##### We gotta figure out how to handle reals
+                    #int_fsm
+                 #else:
+                    #kill switch to end compiler
+
+            # place back in list
+        # else:
+            #count +=1
+    #return list
 
 def main():
     users_input = user_input()
-    array = queue_hub(users_input)
-    for token in array:
+    token_record = queue_hub(users_input)
+    #lex_hub(token_record)
+    for token in token_record:
         print(token)
+
+
+    #test for id_fsm
+    # example = "1337"
+    # fsm = id_fsm()
+    # result = all(fsm.transition(char, idx, len(example)) for idx, char in enumerate(example))
+    # print("Valid Identifier:", result)  # Should return True
+
+
+    
 
 if __name__ ==  "__main__":
     main()
