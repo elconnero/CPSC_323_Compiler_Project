@@ -32,6 +32,10 @@ def user_input ():
             user_string = input("Error #1:\nCode needs to start with $$ to begin compile.\nEnter what you would like to say.\nEnter Here: ")
     return user_string
 
+# Separators and Operators for number recognition
+seperator = {",", "$", "(", ")", ";", "{", "}", "."}
+operator = {"+", "-", "*", "/", "%", "<", ">", "="}
+
 def token_giver(code):
         types = {1: "KEYWORD", 2: "OPERATOR", 3: "SEPARATOR", 4: "UNDEFINED"}
         return types.get(code, "UNKNOWN")
