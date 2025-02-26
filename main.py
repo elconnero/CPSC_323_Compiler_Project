@@ -55,66 +55,7 @@ def token_giver(code):
 	return "UNKNOWN"
 	
 # Checks whether we have a valid real
-def is_valid_real(real):
-	# Requirements: isdigit() . isdigit()
-	#				TRUE	  . TRUE
-	real_float = 0.0
-	try:
-		real_float = float(real)
-		
-	except:
-		return False
-	'''
-	# Return false if real has a negative sign after the first d (something like d-.d or d.-d or d.d-)
-	string = str(real)
-	if (string[0] == "-"):
-		string = string[1:]
-		if ("-" in string):
-			return False
-		
-		
-		real = float(string)
-	
 
-	
-
-	
-
-		
-	# Return false if real has more than one .
-	string = str(real)
-	index_of_first_dot = string.index(".")
-	index_of_first_dot += 1
-	string  = string[index_of_first_dot:]
-	if ("." in string):
-		return False
-		
-
-			
-			
-	'''	
-	string = str(real)
-	
-	# Return false if reall == .d || -.d
-	if (string[0] == "-"):
-		
-		if (string[1].isdigit() == False):
-			return False
-	
-	if (string[0] == "."):
-		return False	
-	
-	# Return false if real == d (does not have .)
-	if ("." not in string):
-		return False
-		
-	# Return false if real == d.
-	if (string[-1].isdigit() == False):
-		return False
-		
-	return True
-
-	
 
 def queue_hub(user_input):
     
@@ -240,7 +181,7 @@ class id_fsm:
     #return list
 
 def main():
-	'''
+
     users_input = user_input()
     token_record = queue_hub(users_input)
     refined_token = operator_smasher(token_record)
@@ -248,19 +189,7 @@ def main():
     for token in refined_token:
         print(token)
 
-	'''
-	# Testing is_valid_real():
-	print("Press \"x\" to exit\n")
-	want_to_test_more = True
-	while want_to_test_more:
-	
-		user_input = input("Enter a valid real: ")
-		
-		if user_input == "x":
-			want_to_test_more == False
-			break
-		
-		print(is_valid_real(user_input))
+
 		
 		
 	
