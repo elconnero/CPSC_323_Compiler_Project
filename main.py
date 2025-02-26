@@ -52,6 +52,21 @@ def queue_hub(user_input):
     while queue:
         char = queue.popleft()
 
+        # Skip Comments
+        if char == "[" and queue and queue[0] == "*":
+            # Skip the '*'
+            queue.popleft()  
+
+            # Continue popping until the end of the comment is found
+            while queue:
+                next_char = queue.popleft()
+                if next_char == "*" and queue and queue[0] == "]":
+                    # Skip the closing ']'
+                    queue.popleft()  
+                    break
+            token = ""
+            continue
+
         if char == "\n":
             continue
         
