@@ -51,6 +51,9 @@ def queue_hub(user_input):
 
     while queue:
         char = queue.popleft()
+
+        if char == "\n":
+            continue
         
         # Modification: If the current character is a dot, check if it should be part of a number.
         if char == ".":
