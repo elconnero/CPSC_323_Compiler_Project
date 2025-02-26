@@ -12,7 +12,7 @@ from collections import deque
 # Global Variables:
 reserved_words = {
     #               0       1      2       3         4       5         6       7          8          9
-    "keywords": ["integer", "if", "else", "endif", "while", "return", "scan", "print", "function", "scan"],
+    "keywords": ["integer", "if", "else", "endif", "while", "return", "scan", "print", "function", "scan", "endwhile"],
     #             0    1    2    3    4   5   6 
     "seperator": [",", "$", "(", ")", ";", "{", "}", "."],
     #            0    1    2    3    4    5    6    7
