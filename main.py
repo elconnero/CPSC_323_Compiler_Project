@@ -77,7 +77,7 @@ def queue_hub(user_input):
     
     return list(token_queue)
 
-def operator_smasher(token):
+def operator_smasher(token): ## Need to flush this out more, but a good prototype for what we need. 
     x = 0
     while x < len(token) -1 :
         if token[x][1] == 'OPERATOR' and token[x+1][1] == 'OPERATOR':
