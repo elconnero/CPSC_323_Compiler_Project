@@ -1,0 +1,6 @@
+a = 0.99;
+b = .25;
+c = 10.;
+d = 23.00;
+
+[* Comment Testing and edgecases *]
