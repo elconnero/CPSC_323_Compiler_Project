@@ -263,6 +263,9 @@ def lex_hub(token_record):
                         refined_tokens.append((tok, "IDENTIFIER"))
                 else:
                     refined_tokens.append((tok, "ERROR"))
+                    return "COMPILATION ERROR" ###
+
+
             elif tok[0].isdigit():
                 if '.' in tok:
                     fsm = real_fsm()
@@ -276,8 +279,10 @@ def lex_hub(token_record):
                         refined_tokens.append((tok, "INTEGER"))
                     else:
                         refined_tokens.append((tok, "ERROR"))
+                        return "COMPILATION ERROR" ###
             else:
                 refined_tokens.append((tok, "ERROR"))
+                return "COMPILATION ERROR" ###
         else:
             refined_tokens.append((tok, tok_type))
     return refined_tokens
@@ -309,22 +314,25 @@ def main():
     # Refine tokens using FSMs.
     refined_tokens = lex_hub(token_record)
     
-    # Write tokens to output file.
-    outtake = intake.rsplit(".",1)[0] + "_output" + intake.rsplit(".",1)[1]
-    with open(outtake, "w") as output_file:
-        output_file.write("Token\t\tLexeme\n")
+    if refined_tokens == "COMPILATION ERROR":
+        print("COMPILATION ERROR")
+    else:
+        # Write tokens to output file.
+        outtake = intake.rsplit(".",1)[0] + "_output" + intake.rsplit(".",1)[1]
+        with open(outtake, "w") as output_file:
+            output_file.write("Token\t\tLexeme\n")
+            for token in refined_tokens:
+                output_file.write(f"{token[1]:<10}\t{token[0]}\n")
+        
+        # Also print tokens to the console.
         for token in refined_tokens:
-            output_file.write(f"{token[1]:<10}\t{token[0]}\n")
-    
-    # Also print tokens to the console.
-    for token in refined_tokens:
-        print(f"{token[1]:<10}\t{token[0]}")
-    
-    # Demonstrate the lexer() generator.
-    print("\nTokens using lexer() generator:")
-    token_generator = lexer(refined_tokens)
-    for tok in token_generator:
-        print(tok)
+            print(f"{token[1]:<10}\t{token[0]}")
+        
+        # Demonstrate the lexer() generator.
+        print("\nTokens using lexer() generator:")
+        token_generator = lexer(refined_tokens)
+        for tok in token_generator:
+            print(tok)
 
 if __name__ == "__main__":
     main()
