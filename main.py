@@ -36,7 +36,10 @@ files = [
 def user_selection(x):
     if x==1:
         for i in range(len(files)):
-            print(f'{i}. {files[i]}')
+            if i == 0:
+                print(f'{i}. {files[i]} <This wille fail to compile by design>')
+            else:
+                print(f'{i}. {files[i]}')
 
         while True:
             try:
@@ -50,9 +53,6 @@ def user_selection(x):
                     print(f"Please enter a number between 0 and {len(files) - 1}.")
             except ValueError:
                 print("Invalid input. Input a valid number.\nEnter here:")
-
-
-
 
 # Reads source code from a file (source_rat25s.txt)
 def read_source_file(filename):
@@ -299,40 +299,62 @@ def lexer(token_list):
 # =========================
 def main():
 
-    # Letting user check which testcase they would like or enter manuel code.
-    intake = user_selection(1)
+    keep_going = True
+    while keep_going:
+        # Letting user check which testcase they would like or enter manuel code.
+        intake = user_selection(1)
 
-    # Read source code from file.
-    source_code = read_source_file(intake)
-    
-    # Tokenize the input.
-    token_record = queue_hub(source_code)
-    
-    # Combine adjacent operator tokens.
-    token_record = operator_smasher(token_record)
-    
-    # Refine tokens using FSMs.
-    refined_tokens = lex_hub(token_record)
-    
-    if refined_tokens == "COMPILATION ERROR":
-        print("COMPILATION ERROR")
-    else:
-        # Write tokens to output file.
-        outtake = intake.rsplit(".",1)[0] + "_output" + intake.rsplit(".",1)[1]
-        with open(outtake, "w") as output_file:
-            output_file.write("Token\t\tLexeme\n")
+        # Read source code from file.
+        source_code = read_source_file(intake)
+        
+        # Tokenize the input.
+        token_record = queue_hub(source_code)
+        
+        # Combine adjacent operator tokens.
+        token_record = operator_smasher(token_record)
+        
+        # Refine tokens using FSMs.
+        refined_tokens = lex_hub(token_record)
+        
+        if refined_tokens == "COMPILATION ERROR":
+            print("COMPILATION ERROR")
+        else:
+            # Write tokens to output file.
+            outtake = intake.rsplit(".",1)[0] + "_output" + intake.rsplit(".",1)[1]
+            with open(outtake, "w") as output_file:
+                output_file.write("Token\t\tLexeme\n")
+                for token in refined_tokens:
+                    output_file.write(f"{token[1]:<10}\t{token[0]}\n")
+            
+            # Also print tokens to the console.
             for token in refined_tokens:
-                output_file.write(f"{token[1]:<10}\t{token[0]}\n")
+                print(f"{token[1]:<10}\t{token[0]}")
+            
+            # Demonstrate the lexer() generator.
+            print("\nTokens using lexer() generator:")
+            token_generator = lexer(refined_tokens)
+            for tok in token_generator:
+                print(tok)
+
+        input("Press Enter to continue\n")
         
-        # Also print tokens to the console.
-        for token in refined_tokens:
-            print(f"{token[1]:<10}\t{token[0]}")
         
-        # Demonstrate the lexer() generator.
-        print("\nTokens using lexer() generator:")
-        token_generator = lexer(refined_tokens)
-        for tok in token_generator:
-            print(tok)
+        while True:
+            try:
+                choice = int(input("Would you like to repeat test?\n1. Repeat\n2. Stop Program\nEnter Here:"))
+                if choice == 1: # Repeat test
+                    keep_going = True
+                    break
+                elif choice == 2: # Stop test
+                    keep_going = False
+                    break 
+                else:
+                    print("Invalid input. Please enter 1 or 2.\n")
+            except ValueError:
+                print("Invalid input. Please enter a number (1 or 2).\n")
+            
+            input("Press Enter to continue\n")
+                    
 
 if __name__ == "__main__":
     main()
