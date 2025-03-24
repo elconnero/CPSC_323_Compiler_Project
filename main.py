@@ -26,39 +26,38 @@ files = [
     "source_rat25s.txt",
     "testcase1.txt",
     "testcase2.txt",
-    "entermanuel.txt"
+    "enter manuel file.txt"
 ]
 
 # =========================
 # Function Libs
 # =========================
 
-def user_selection(x):
-    if x==1:
-        for i in range(len(files)):
-            if i == 0:
-                print(f'{i}. {files[i]} <This wille fail to compile by design>')
-            else:
-                print(f'{i}. {files[i]}')
+def user_selection():
+    
+    for i in range(len(files)):
+        if i == 0:
+            print(f'{i}. {files[i]} <This will fail to compile by design>')
+        else:
+            print(f'{i}. {files[i]}')
 
-        while True:
-            try:
-                user_input = int(input ("Enter the file number you would like to test.\nEnter here: "))
-                if 0<= user_input <len(files):
-                    if user_input <len(files)-1:
-                        return files[user_input]
-                    else:
-                        return "entermanuel.txt"
+    while True:
+        try:
+            user_input = int(input ("Enter the file number you would like to test.\nEnter here: "))
+            if 0<= user_input <len(files):
+                if user_input <len(files)-1:
+                    return files[user_input]
                 else:
-                    print(f"Please enter a number between 0 and {len(files) - 1}.")
-            except ValueError:
-                print("Invalid input. Input a valid number.\nEnter here:")
+                    custom_file_name = input ("Ensure file you wish to analyze is in the same folder as main.py, furthermore ensure the filename is as exactly as it is in explorer.\nExample[sample_test_case.txt]\nEnter the name of the file you wish to bring into progam.\nEnter Here: ")
+                    return custom_file_name
+            else:
+                print(f"Please enter a number between 0 and {len(files) - 1}.")
+        except ValueError:
+            print("Invalid input. Input a valid number.\nEnter here:")
 
 # Reads source code from a file (source_rat25s.txt)
 def read_source_file(filename):
-    if filename == "entermanuel.txt":
-        user_code = input("Enter the code that you would like to input.\n Enter Here")
-        return user_code
+    
     try:
         with open(filename, "r") as f:
             code = f.read()
@@ -302,7 +301,7 @@ def main():
     keep_going = True
     while keep_going:
         # Letting user check which testcase they would like or enter manuel code.
-        intake = user_selection(1)
+        intake = user_selection()
 
         # Read source code from file.
         source_code = read_source_file(intake)
