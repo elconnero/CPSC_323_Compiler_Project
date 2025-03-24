@@ -12,14 +12,18 @@ from collections import deque
 
 # Global Variables:
 reserved_words = {
-    #               0         1      2       3         4       5         6       7          8         9        10
-    "keywords": ["integer", "if", "else", "endif", "while", "return", "scan", "print", "function", "scan", "endwhile"],
+    #               0         1      2       3         4       5         6       7          8         9        10        11      12      13       14        15         16
+    "keywords":  ["integer", "if", "else", "endif", "while", "return", "scan", "print", "function", "scan", "endwhile", "true", "True", "false", "False", "boolean", "real" ],
     #              0    1    2    3    4    5    6    7 
     "seperator": [",", "$", "(", ")", ";", "{", "}", "."],
-    #             0    1    2    3    4    5    6    7    8
-    "operator": ["+", "-", "*", "/", "%", "<", ">", "=", "&"],
-    #            0     1
-    "comment": ["[*", "*]"]
+    #               0
+    "mash_sep":  ["$$"],
+    #              0    1    2    3    4    5    6    7    8    9
+    "operator":  ["+", "-", "*", "/", "%", "<", ">", "=", "&", "!"],
+    #               0     1
+    "comment":   ["[*", "*]"],
+    #
+    "mash_opp":  ["==", "!=", "<=", "=>", "+=", "-="]
 }
 
 files = [
@@ -140,10 +144,22 @@ def queue_hub(user_input):
 def operator_smasher(token_list):
     x = 0
     while x < len(token_list) - 1:
-        if token_list[x][1] == 'OPERATOR' and token_list[x+1][1] == 'OPERATOR':
+        if token_list[x][1] == 'OPERATOR' and token_list[x][0] in reserved_words["mash_opp"]:
+            x += 1 
+        elif token_list[x][1] == 'OPERATOR' and token_list[x+1][1] == 'OPERATOR':
             smash = token_list[x][0] + token_list[x+1][0]
-            token_list[x] = (smash, 'OPERATOR')
-            del token_list[x+1]
+            if smash in reserved_words["mash_opp"]:
+                token_list[x] = (smash, 'OPERATOR')
+                del token_list[x+1]
+            else:
+                x += 1
+        elif token_list[x][1] == 'SEPARATOR' and token_list[x+1][1] == 'SEPARATOR':
+            smash = token_list[x][0] + token_list[x+1][0]
+            if smash in reserved_words["mash_sep"]:
+                token_list[x] = (smash, 'SEPARATOR')
+                del token_list[x+1]
+            else:
+                x += 1
         else:
             x += 1
     return token_list
@@ -262,7 +278,7 @@ def lex_hub(token_record):
                         refined_tokens.append((tok, "IDENTIFIER"))
                 else:
                     refined_tokens.append((tok, "ERROR"))
-                    return "COMPILATION ERROR" ###
+                    # return "COMPILATION ERROR" ### Might Need to rip this out
 
 
             elif tok[0].isdigit():
@@ -278,10 +294,10 @@ def lex_hub(token_record):
                         refined_tokens.append((tok, "INTEGER"))
                     else:
                         refined_tokens.append((tok, "ERROR"))
-                        return "COMPILATION ERROR" ###
+                        # return "COMPILATION ERROR" ### Might Need to rip this out
             else:
                 refined_tokens.append((tok, "ERROR"))
-                return "COMPILATION ERROR" ###
+                # return "COMPILATION ERROR" ### Might Need to rip this out
         else:
             refined_tokens.append((tok, tok_type))
     return refined_tokens
@@ -315,29 +331,25 @@ def main():
         # Refine tokens using FSMs.
         refined_tokens = lex_hub(token_record)
         
-        if refined_tokens == "COMPILATION ERROR":
-            print("COMPILATION ERROR")
-        else:
-            # Write tokens to output file.
-            outtake = intake.rsplit(".",1)[0] + "_output" + intake.rsplit(".",1)[1]
-            with open(outtake, "w") as output_file:
-                output_file.write("Token\t\tLexeme\n")
-                for token in refined_tokens:
-                    output_file.write(f"{token[1]:<10}\t{token[0]}\n")
-            
-            # Also print tokens to the console.
+        # Write tokens to output file.
+        outtake = intake.rsplit(".",1)[0] + "_output." + intake.rsplit(".",1)[1]
+        with open(outtake, "w") as output_file:
+            output_file.write("Token\t\tLexeme\n")
             for token in refined_tokens:
-                print(f"{token[1]:<10}\t{token[0]}")
-            
-            # Demonstrate the lexer() generator.
-            print("\nTokens using lexer() generator:")
-            token_generator = lexer(refined_tokens)
-            for tok in token_generator:
-                print(tok)
+                output_file.write(f"{token[1]:<10}\t{token[0]}\n")
+        
+        # Also print tokens to the console.
+        for token in refined_tokens:
+            print(f"{token[1]:<10}\t{token[0]}")
+        
+        # Demonstrate the lexer() generator.
+        print("\nTokens using lexer() generator:")
+        token_generator = lexer(refined_tokens)
+        for tok in token_generator:
+            print(tok)
 
         input("Press Enter to continue\n")
-        
-        
+           
         while True:
             try:
                 choice = int(input("Would you like to repeat test?\n1. Repeat\n2. Stop Program\nEnter Here:"))
