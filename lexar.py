@@ -170,11 +170,11 @@ def operator_smasher(token_list):
 class id_fsm:
     def __init__(self):
         self.status = {
-            "crossroad": self.crossroad,
-            "digit": self.found_digit,
-            "letter": self.found_letter,
+            "crossroad" : self.crossroad,
+            "digit"     : self.found_digit,
+            "letter"    : self.found_letter,
             "underScore": self.found__,
-            "id": self.id_found
+            "id"        : self.id_found
         }
         self.current_state = "crossroad"
 

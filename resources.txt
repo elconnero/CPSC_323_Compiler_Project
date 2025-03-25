@@ -1,0 +1,19 @@
+Links that will help with assignment.
+
+How to build Recursive Descent Parser:
+https://www.geeksforgeeks.org/recursive-descent-parser/
+Note: This article is pretty decent and helped understand it a bit. 
+
+
+Pratt parser (a "modern" approach to recursive descent parsing)
+https://craftinginterpreters.com/contents.html
+Note: Written in C and Java, this might be a good area to focus on.
+
+Earley parser
+https://en.m.wikipedia.org/wiki/Earley_parser
+
+
+
+
+Syntax rules for RAT25:
+Google Drive link: https://docs.google.com/document/d/1ZH1mkD_Qg_s3n0ZFeo4HfN-9kDihRSKC/edit?usp=sharing&ouid=101807258030838846157&rtpof=true&sd=true
