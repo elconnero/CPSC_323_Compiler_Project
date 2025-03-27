@@ -9,6 +9,7 @@
 #Assignment  : 1
 
 from collections import deque
+import file_read
 
 # Global Variables:
 reserved_words = {
@@ -22,7 +23,7 @@ reserved_words = {
     "operator":  ["+", "-", "*", "/", "%", "<", ">", "=", "&", "!"],
     #               0     1
     "comment":   ["[*", "*]"],
-    #
+    #              0      1     2    3     4     5
     "mash_opp":  ["==", "!=", "<=", "=>", "+=", "-="]
 }
 
@@ -311,8 +312,8 @@ def lexer(token_list):
 
 # This is called by main.py
 # For assignment 2, we will also use this for testing. 
-def lexar_call(file): 
-    source_code = read_source_file(file)    
+def lexar_call(source_code): 
+    
     token_record = queue_hub(source_code)
     token_record = operator_smasher(token_record)
     refined_tokens = lex_hub(token_record)
@@ -335,10 +336,10 @@ def main(): # Trouble shooting area
     keep_going = True
     while keep_going:
         # Letting user check which testcase they would like or enter manuel code.
-        intake = user_selection()
+        intake = user_selection() # Might be able to get rid of these, we created a new .py so we might be able to get rid of these. Keeping in for now. 
 
         # Read source code from file.
-        source_code = read_source_file(intake)
+        source_code = read_source_file(intake) # Might be able to get rid of these, we created a new .py so we might be able to get rid of these. Keeping in for now.
         
         # Tokenize the input.
         token_record = queue_hub(source_code)
@@ -384,6 +385,5 @@ def main(): # Trouble shooting area
             
             input("Press Enter to continue\n")
                     
-
 if __name__ == "__main__":
     main()
