@@ -11,6 +11,7 @@
 
 import lexar_component, syntax, file_read
 
+
 def main():
 
     lexar = lexar_component.lexar_call
@@ -21,7 +22,5 @@ def main():
     hello = file_read.file_read()
     test = lexar(hello)
     print(test)
-
-
 if __name__ == "__main__":
     main()

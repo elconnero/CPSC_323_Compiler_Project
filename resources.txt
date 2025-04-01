@@ -4,6 +4,9 @@ How to build Recursive Descent Parser:
 https://www.geeksforgeeks.org/recursive-descent-parser/
 Note: This article is pretty decent and helped understand it a bit. 
 
+https://www.youtube.com/watch?v=5oe823-U-6I&t=270s
+Note: This is pretty good. 
+
 
 Pratt parser (a "modern" approach to recursive descent parsing)
 https://craftinginterpreters.com/contents.html

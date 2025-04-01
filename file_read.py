@@ -49,6 +49,10 @@ def file_read():
     source_code = read_source_file(intake)
     return source_code
 
+def syntax_testcase(): # A way to open any file you want without having to jump through hoops. 
+    source_code = read_source_file('me1.txt')
+    return source_code
+
 # Trouble shooting area
 def main(): 
     user_selection()                    
