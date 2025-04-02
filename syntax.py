@@ -12,7 +12,6 @@ import lexar_component, file_read
 
 
 # Global Variables:
-# switch = None # We might just have a user change this to true or false here, it would be interesting to do it this way. // Also might just keep this in troubleshoot
 
 # =========================
 # Function Libs
@@ -85,19 +84,34 @@ def rat_rules(rule_number):
 def rat25s(token, flicker):
     if flicker == 1:
         print(rat_rules(0))
-    pass
+
+    if token[0] != ('$$', 'SEPARATOR'): 
+        return "<ERROR>, $$ MISSING" # I am not sure if this is the right thing to do, but we are going to go forward. 
+    token.pop(0)
+    
+    if token[0] == ('function', 'KEYWORD'):
+        OFD(token, flicker)
+
+    if token[0] == None:
+        return None # I have this here because OFD and ODL both have an empty option. 
+    else:
+        return "<ERROR>, Lost in EMPTY From R1"
 
 #R2
 def OFD(token, flicker): # Opt Function Definitions
+
     if flicker == 1:
-        print(rat_rules(1))    
-    pass
+        print(f'{rat_rules(1)} .1')    
+
+    parse_function(token, flicker)
+
 
 #R3
 def FD(token, flicker): #Function Definitions
     if flicker == 1:
         print(rat_rules(2))    
-    pass
+    
+
 
 #R4
 def FD_prime(token, flicker): #Function Definitions Prime
@@ -109,7 +123,10 @@ def FD_prime(token, flicker): #Function Definitions Prime
 def parse_function(token, flicker): #function
     if flicker == 1:
         print(rat_rules(4))    
-    pass
+
+    token.pop(0)
+    if token[1] == 'IDENTIFIER':
+        if token[0] == ('(', 'SEPARATOR'):
 
 #R6
 def OPL(token, flicker): # Opt Parameter List
@@ -328,10 +345,7 @@ def main():
     token = lexar(me1) # If you wish to modify this to try out different testcases, change file_read.syntax_testcase() in me1 to file_read.file_read()
     light = switch()
 
-
-
-
-
+    rat25s(token, light)
     print(token,light)
 
 if __name__ == "__main__":
@@ -340,5 +354,4 @@ if __name__ == "__main__":
 
 
 # Notes:
-# The parser should print to an output file the tokens, lexemes and
-# the production rules used.
+# <Error> Is just something I thought we can use to check
