@@ -93,7 +93,7 @@ def rat25s(token, flicker):
         OFD(token, flicker)
 
     if token[0] == None:
-        return None # I have this here because OFD and ODL both have an empty option. 
+        return None # I have this here because OFD and ODL both have an empty option. , The more I think of it, this really might not be the best option. 
     else:
         return "<ERROR>, Lost in EMPTY From R1"
 
@@ -105,14 +105,11 @@ def OFD(token, flicker): # Opt Function Definitions
 
     parse_function(token, flicker)
 
-
 #R3
 def FD(token, flicker): #Function Definitions
     if flicker == 1:
         print(rat_rules(2))    
     
-
-
 #R4
 def FD_prime(token, flicker): #Function Definitions Prime
     if flicker == 1:
@@ -127,18 +124,31 @@ def parse_function(token, flicker): #function
     token.pop(0)
     if token[1] == 'IDENTIFIER':
         if token[0] == ('(', 'SEPARATOR'):
+            OPL(token, flicker) # We have a check for ')' if empty at OPL. Make sure we have a backup plan if there are conents within there.
 
 #R6
 def OPL(token, flicker): # Opt Parameter List
     if flicker == 1:
         print(rat_rules(5))    
-    pass
+    
+    token.pop(0)
+    if token[0] == (')', 'SEPARATOR'): #This is my version of empty.
+        token.pop(0)
+        ODL(token,flicker)
+
+    PL(token, flicker)
+    
+    
+
 
 #R7
 def PL(token, flicker): #Parameter List
     if flicker == 1:
         print(rat_rules(6))
     pass
+
+    parse_parameter(token, flicker)
+    PL_prime(token, flicker)
 
 #R8
 def PL_prime(token, flicker): #Parameter List Prime
@@ -151,6 +161,7 @@ def parse_parameter(token, flicker): #Parameter
     if flicker == 1:
         print(rat_rules(8))    
     pass
+    #This is where you last left off.
 
 #R10
 def parse_qualifier(token, flicker): #qualifier
