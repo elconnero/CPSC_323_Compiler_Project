@@ -1,0 +1,46 @@
+[*Test Case 2*]
+integer a;
+integer b;
+integer c;
+integer d;
+integer result;
+real x;
+real y;
+real z;
+
+[*Initialize variables*]
+a = 5;
+b = 10;
+c = 15;
+d = 20;
+x = 2.5;
+y = 3.0;
+z = 4.0;
+
+[*Complex arithmetic expressions*]
+result = (a + b) * (c - d);
+result = a * b + c * d;
+result = (a + b + c) * (d - a - b);
+result = a * (b + c) / (d - a);
+
+[*Nested expressions with real numbers*]
+x = (x + y) * (z - x);
+y = x * y + z * x;
+z = (x + y + z) * (x - y - z);
+x = x * (y + z) / (x - y);
+
+[*Mixed type expressions*]
+result = a + (integer)(x * y);
+x = x + (real)(a * b);
+result = (integer)((x + y) * z);
+x = (real)(a + b) / (real)c;
+
+[*Complex boolean expressions*]
+boolean condition1;
+boolean condition2;
+boolean final_result;
+
+condition1 = (a > b) and (c < d);
+condition2 = (x != y) or (z == x);
+final_result = condition1 and not condition2;
+final_result = (a + b > c) or (x * y < z); 

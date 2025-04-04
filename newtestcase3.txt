@@ -1,0 +1,64 @@
+[*Test Case 3*]
+[*Testing Control Flow and Program Structure*]
+integer score;
+integer grade;
+boolean passed;
+integer attempts;
+real average;
+integer total;
+integer count;
+
+[*Initialize variables*]
+score = 85;
+grade = 0;
+passed = false;
+attempts = 0;
+total = 0;
+count = 0;
+average = 0.0;
+
+[*An If-else structure with nested conditions*]
+if (score >= 90) {
+    grade = 4;
+    passed = true;
+    print("Grade: A");
+} else if (score >= 80) {
+    grade = 3;
+    passed = true;
+    print("Grade: B");
+} else if (score >= 70) {
+    grade = 2;
+    passed = true;
+    print("Grade: C");
+} else {
+    grade = 1;
+    passed = false;
+    print("Did not pass.");
+}
+
+[*While loop with a complex condition*]
+while (attempts < 3 and not passed) {
+    score = score + 5;
+    attempts = attempts + 1;
+    if (score >= 70) {
+        passed = true;
+        print("Passed on attempt", attempts);
+    }
+}
+
+[*Nested if statements with boolean operations*]
+if (passed and attempts <= 3) {
+    if (grade >= 3) {
+        print("Qualified for advanced course.");
+    } else if (grade >= 2 and attempts == 1) {
+        print("Qualified for standard course.");
+    }
+}
+
+[*Calculate average with error checking*]
+if (count > 0) {
+    average = (real)total / (real)count;
+    print("Average score:", average);
+} else {
+    print("No scores to average.");
+} 

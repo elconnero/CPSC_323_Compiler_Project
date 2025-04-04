@@ -1,0 +1,44 @@
+[*Test Case 1*]
+[*Variable Declarations and Basic Operations*]
+integer x;
+integer y;
+integer z;
+real pi;
+real radius;
+real area;
+boolean flag;
+boolean is_valid;
+
+[*Initialize variables*]
+x = 10;
+y = 20;
+z = x + y;
+pi = 3.14159;
+radius = 5.0;
+area = pi * radius * radius;
+flag = true;
+is_valid = false;
+
+[*Basic arithmetic operations*]
+x = x + 1;
+y = y - 5;
+z = x * y;
+x = z / 2;
+
+[*Mixed type operations*]
+radius = radius + 1;
+area = area - 10.5;
+pi = pi * 2;
+
+[*Boolean operations*]
+flag = true;
+is_valid = flag;
+flag = false;
+is_valid = not flag;
+
+[*Final Tests*]
+x = 100;
+y = 200;
+z = x + y;
+radius = 10.0;
+area = pi * radius * radius; 
