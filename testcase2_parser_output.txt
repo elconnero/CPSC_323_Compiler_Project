@@ -1,0 +1,2 @@
+<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$
+Syntax Error: Expected SEPARATOR, but found KEYWORD ('while')

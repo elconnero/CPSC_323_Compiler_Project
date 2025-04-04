@@ -1,405 +1,384 @@
-#Students    : Darren Chen     
-#              Mariah Salgado
-#              Affan Siddiqui
-# Team Leader: Conner Robbins
-#Class       : CPSC-323-07 13801
-#Professor   : James S. Choi, Ph.D.
-#Date        : 20250220
-#Due         : 20250406
-#Assignment  : 2
+import sys
+import os
+from lexar_component import user_selection, read_source_file, queue_hub, lexer, operator_smasher# import necessary functions from lexer
 
-import lexar_component, file_read
+# Global variables
+current_token = None
+current_lexeme = None
+token_index = 0
+tokens = []
+
+# Debug switch
+debug = True
+
+# Load and process the source file into tokens
+def load_tokens():
+    global tokens
+    filename = user_selection() # ask user to select input file
+    source_code = read_source_file(filename) # read contents of file
+    token_queue = queue_hub(source_code)# break input into  tokens
+    token_queue = operator_smasher(token_queue)# combine multi-char operators
+    tokens = list(lexer(token_queue))# finalize tokens
+    tokens.append(('EOF', 'EOF'))# append end-of-file token
+
+# Move to the next token in the token list
+def next_token():
+    global current_token, current_lexeme, token_index
+    if token_index < len(tokens):
+        current_token, current_lexeme = tokens[token_index][1], tokens[token_index][0]
+        token_index += 1
+
+# Match the current token with the expected token
+def match(expected_token):
+    if current_token == expected_token:
+        if debug:
+            print(f"Matched: Token: {current_token}, Lexeme: {current_lexeme}")
+        next_token()
+    else:
+        syntax_error(expected_token)
+
+# Handle unexpected syntax
+def syntax_error(expected):
+    print(f"Syntax Error: Expected {expected}, but found {current_token} ('{current_lexeme}')")
+    exit(1)
+
+# Start symbol for RAT25S grammar
+def parseRat25S():
+    print("<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$")
+    match('SEPARATOR')  
+    parseOptFunctionDefinitions()
+    match('SEPARATOR')  
+    parseOptDeclarationList()
+    match('SEPARATOR')  
+    parseStatementList()
+    match('SEPARATOR')  
+
+def run_parser_with_tokens(tok_list, filename):
+    global tokens, token_index, current_token, current_lexeme
+    tokens = tok_list
+    tokens.append(('EOF', 'EOF'))
+    token_index = 0
+    current_token = None
+    current_lexeme = None
+
+    next_token()
+
+    # Create parser output file
+    output_filename = os.path.splitext(filename)[0] + "_parser_output.txt"
+
+    with open(output_filename, "w") as f:
+        sys.stdout = f
+        parseRat25S()
+        sys.stdout = sys.__stdout__ 
+
+    print(f"Parser output written to: {output_filename}")
 
 
-# Global Variables:
 
-# =========================
-# Function Libs
-# =========================
-
-def switch():
-    light = None
-    while True:
-        try:
-            user_input = int(input("Would you like to print debug flags while Syntax Analyxer conducts its work?\n1. No\n2. Yes\nType in corresponding integer next to statement.\nEnter Here: "))
-            if 1 <= user_input <= 2:
-                light = user_input - 1
-                return light
-        except ValueError:
-            print("Enter 1 for NO.\nEnter 2 for YES.")
-
-def rat_rules(rule_number):
-    rules = [
-        "<Rat25S> ::= $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$",            #0   R1        
-        "<Opt Function Definitions> ::= <Function Definitions> | <Empty>",                                        #1   R2 
-        "<Function Definitions> ::= <Function> | <Function> <Function Definitions Prime>",                        #2   R3
-        "<Function Definitions Prime> ::= ε | <Function Definitions>",                                            #3   R4
-        "<Function> ::= function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>",            #4   R5 
-        "<Opt Parameter List> ::= <Parameter List> | <Empty>",                                                    #5   R6                                    
-        "<Parameter List> ::= <Parameter> | <Parameter> , <Parameter List Prime>",                                #6   R7
-        "<Parameter List Prime> ::= ε | , <Parameter List>",                                                      #7   R8
-        "<Parameter> ::= <IDs> <Qualifier>",                                                                      #8   R9  
-        "<Qualifier> ::= integer | boolean | real",                                                               #9   R10 
-        "<Body> ::= { <Statement List> }",                                                                        #10  R11  
-        "<Opt Declaration List> ::= <Declaration List> | <Empty>",                                                #11  R12  
-        "<Declaration List> := <Declaration> ; | <Declaration> <Declaration List Prime>",                         #12  R13
-        "<Declaration List Prime> ::= ε | <Declaration List>",                                                    #13  R14
-        "<Declaration> ::= integer <IDs> | boolean <IDs> | real <IDs>",                                           #14  R15  
-        "<IDs> ::= <Identifier> | <Identifier><IDs Prime>",                                                       #15  R16
-        "<IDs Prime> ::= ε | , <IDs>",                                                                            #16  R17
-        "<Statement List> ::= <Statement> | <Statement><Statement List Prime>",                                   #17  R18
-        "<Statement List Prime> ::= ε | <Statement List>",                                                        #18  R19
-        "<Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>",                   #19  R20 
-        "<Compound> ::= { <Statement List> }",                                                                    #20  R21  
-        "<Assign> ::= <Identifier> = <Expression>",                                                               #21  R22  
-        "<If> ::= if ( <Condition> ) <Statement><If Prime>",                                                      #22  R23
-        "<If Prime> ::= endif | else <Statement> endif",                                                          #23  R24
-        "<Return> ::= return ; | return <Return Prime>",                                                          #24  R25
-        "<Return Prime> ::= ; | <Expression> ;",                                                                  #25  R26
-        "<Print> ::= print ( <Expression> )",                                                                     #26  R27  
-        "<Scan> ::= scan ( <IDs> )",                                                                              #27  R28  
-        "<While> ::= while ( <Condition> ) <Statement> endwhile",                                                 #28  R29  
-        "<Condition> ::= <Expression> <Relop> <Expression>",                                                      #29  R30  
-        "<Relop> ::= == | != | > | < | <= | =>",                                                                  #30  R31  
-        "<Expression> ::= <Term> <Expression Prime>",                                                             #31  R32  
-        "<Expression Prime> ::= + <Term> <Expression Prime> | - <Term> <Expression Prime> | ε",                   #32  R33  
-        "<Term> ::= <Factor> <Term Prime>",                                                                       #33  R34  
-        "<Term Prime> ::= * <Factor> <Term Prime> | / <Factor> <Term Prime> | ε",                                 #34  R35 
-        "<Factor> ::= - <Primary> | <Primary>",                                                                   #35  R36  
-        "<Primary> ::= <Identifier> <Primary Prime> | <Integer> | ( <Expression> ) | <Real> | true | false",      #36  R37
-        " <Primary Prime> ::= ε | ( <IDs> )",                                                                     #37  R38
-        "<Empty> ::= ε",                                                                                          #38  R39  
-    ]
-    return rules[rule_number]
-
-# =========================
-# END of Function Libs
-# =========================
-
-# =========================
-# PARSE
-# =========================
-
-#R1
-def rat25s(token, debug):
-    if debug == 1:
-        print(rat_rules(0))
-
-    if not token or token[0] != ('$$', 'SEPARATOR'):
-        return "<ERROR>, $$ MISSING" # I am not sure if this is the right thing to do, but we are going to go forward. 
-    token.pop(0)
+def parseOptFunctionDefinitions():
+    if debug:
+        print("<Opt Function Definitions> -> <Function Definitions> | ε")
     
-    if token[0] == ('function', 'KEYWORD'):
-        OFD(token, debug) 
-
-    if not token:
-        return "<ERROR>, Unexpected end of input" # I have this here because OFD and ODL both have an empty option. , The more I think of it, this really might not be the best option. 
+    if current_token == 'KEYWORD' and current_lexeme == 'function':
+        parseFunctionDefinitions()
     else:
-        return "<ERROR>, Lost in EMPTY From R1"
-
-#R2
-def OFD(token, debug): # Opt Function Definitions
-
-    if debug == 1:
-        print(f'{rat_rules(1)} .1')    
-
-    if token and token[0] == ('function', 'KEYWORD'):
-        FD(token, debug)  # R2.1: parse functions
-    else:
-        if debug == 1:
-            print(f'{rat_rules(1)} .2 <Empty>')
-        # R2.2: empty production, do nothing
+        if debug:
+            print("<Opt Function Definitions> -> ε")  # epsilon (empty)
         return
 
-#R3
-def FD(token, debug): #Function Definitions
-    if debug == 1:
-        print(rat_rules(2))    
-    
-    parse_function(token, debug)   # <Function>
-    FD_prime(token, debug)         # <Function Definitions Prime>
-#R4
-def FD_prime(token, debug): #Function Definitions Prime
-    if debug == 1:
-        print(rat_rules(3))
+def parseFunctionDefinitions():
+    if debug:
+        print("<Function Definitions> -> <Function> <Function Definitions Prime>")
+    parseFunction()
+    parseFunctionDefinitionsPrime()
 
-    if token and token[0] == ('function', 'KEYWORD'):
-        if debug == 1:
-            print(f'{rat_rules(3)}.1')  # Recursion
-        FD(token, debug)  # Recurse
+def parseFunctionDefinitionsPrime():
+    if current_token == 'KEYWORD' and current_lexeme == 'function':
+        if debug:
+            print("<Function Definitions Prime> -> <Function> <Function Definitions Prime>")
+        parseFunction()
+        parseFunctionDefinitionsPrime()
     else:
-        if debug == 1:
-            print(f'{rat_rules(3)}.2 <Empty>')
-        return  # epsilon
+        if debug:
+            print("<Function Definitions Prime> -> ε")
 
-#R5
-def parse_function(token, debug): #function
-    if debug == 1:
-        print(rat_rules(4))    
-
-    if not token or token[0] != ('function', 'KEYWORD'):
-        return "<ERROR>, 'function' keyword expected"
-    token.pop(0)  # consume 'function'
-
-    if not token or token[0][1] != 'IDENTIFIER':
-        return "<ERROR>, function name expected"
-    token.pop(0)  # consume identifier
-
-    if not token or token[0] != ('(', 'SEPARATOR'):
-        return "<ERROR>, '(' expected after function name"
-    token.pop(0)  # consume '('
-
-    # Assume OPL() handles both empty and full param list
-    OPL(token, debug)
-
-    if not token or token[0] != (')', 'SEPARATOR'):
-        return "<ERROR>, ')' expected after parameters"
-    token.pop(0)  # consume ')'
-
-    # TODO: call ODL (Opt Declaration List) and Body when ready
-    # ODL(token, debug)
-    # Body(token, debug)
-
-    token.pop(0)
-    if token[1] == 'IDENTIFIER':
-        if token[0] == ('(', 'SEPARATOR'):
-            OPL(token, debug) # We have a check for ')' if empty at OPL. Make sure we have a backup plan if there are conents within there.
-
-#R6
-def OPL(token, debug): # Opt Parameter List
-    if debug == 1:
-        print(rat_rules(5))    
+def parseFunction():
+    if debug:
+        print("<Function> -> function <Identifier> ( <Opt Parameter List> ) <Opt Declaration List> <Body>")
     
-    token.pop(0)
-    if token[0] == (')', 'SEPARATOR'): #This is my version of empty.
-        token.pop(0)
-        ODL(token,debug)
+    match('KEYWORD')  # function
+    match('Identifier')
+    match('SEPARATOR')  # (
+    parseOptParameterList()
+    match('SEPARATOR')  # )
+    parseOptDeclarationList()
+    parseBody()
 
-    PL(token, debug)
+def parseOptParameterList():
+    if debug:
+        print("<Opt Parameter List> -> <Parameter List> | ε")
+
+    if current_token == 'Identifier':
+        parseParameterList()
+    else:
+        if debug:
+            print("<Opt Parameter List> -> ε")
+
+def parseParameterList():
+    if debug:
+        print("<Parameter List> -> <Parameter> <Parameter List Prime>")
+    parseParameter()
+    parseParameterListPrime()
+
+def parseParameterListPrime():
+    if current_lexeme == ',':
+        if debug:
+            print("<Parameter List Prime> -> , <Parameter> <Parameter List Prime>")
+        match('SEPARATOR')
+        parseParameter()
+        parseParameterListPrime()
+    else:
+        if debug:
+            print("<Parameter List Prime> -> ε")
+
+def parseParameter():
+    if debug:
+        print("<Parameter> -> <Identifier> <Qualifier>")
+    match('Identifier')
+    parseQualifier()
+
+def parseQualifier():
+    if debug:
+        print("<Qualifier> -> integer | boolean | real")
+    if current_lexeme in ['integer', 'boolean', 'real']:
+        match('KEYWORD')
+    else:
+        syntax_error("Qualifier (integer, boolean, real) expected")
+
+
+
+def parseOptDeclarationList():
+    if debug:
+        print("<Opt Declaration List> -> <Declaration List> | ε")
     
+    if current_lexeme in ["integer", "boolean", "real"]:
+        parseDeclarationList()
+    else:
+        if debug:
+            print("<Opt Declaration List> -> ε")
 
-#R7
-def PL(token, debug): #Parameter List
-    if debug == 1:
-        print(rat_rules(6))
-    pass
+def parseDeclarationList():
+    if debug:
+        print("<Declaration List> -> <Declaration> ; <Declaration List Prime>")
+    parseDeclaration()
+    match('SEPARATOR')  # ;
+    parseDeclarationListPrime()
 
-    parse_parameter(token, debug)
-    PL_prime(token, debug)
+def parseDeclarationListPrime():
+    if current_lexeme in ["integer", "boolean", "real"]:
+        if debug:
+            print("<Declaration List Prime> -> <Declaration> ; <Declaration List Prime>")
+        parseDeclaration()
+        match('SEPARATOR')  # ;
+        parseDeclarationListPrime()
+    else:
+        if debug:
+            print("<Declaration List Prime> -> ε")
 
-#R8
-def PL_prime(token, debug): #Parameter List Prime
-    if debug == 1:
-        print(rat_rules(7))
-    pass
+def parseDeclaration():
+    if debug:
+        print("<Declaration> -> <Qualifier> <IDs>")
+    parseQualifier()
+    parseIDs()
 
-#R9
-def parse_parameter(token, debug): #Parameter
-    if debug == 1:
-        print(rat_rules(8))    
-    pass
-    #This is where you last left off.
+def parseIDs():
+    if debug:
+        print("<IDs> -> <Identifier> <IDs Prime>")
+    match('Identifier')
+    parseIDsPrime()
 
-#R10
-def parse_qualifier(token, debug): #qualifier
-    if debug == 1:
-        print(rat_rules(9))    
-    pass
+def parseIDsPrime():
+    if current_lexeme == ',':
+        if debug:
+            print("<IDs Prime> -> , <Identifier> <IDs Prime>")
+        match('SEPARATOR')  # ,
+        match('Identifier')
+        parseIDsPrime()
+    else:
+        if debug:
+            print("<IDs Prime> -> ε")
 
-#R11 
-def parse_body(token, debug): #Body
-    if debug == 1:
-        print(rat_rules(10))    
-    pass
+def parseBody():
+    if debug:
+        print("<Body> -> { <Statement List> }")
+    match('SEPARATOR')  # {
+    parseStatementList()
+    match('SEPARATOR')  # }
 
-#R12
-def ODL(token, debug): #Opt Decleration List
-    if debug == 1:
-        print(rat_rules(11))    
-    pass
+def parseStatementList():
+    if debug:
+        print("<Statement List> -> <Statement> <Statement List Prime>")
+    parseStatement()
+    parseStatementListPrime()
 
-#R13
-def DL(token, debug): #Decleration List
-    if debug == 1:
-        print(rat_rules(12))    
-    pass
-
-#R14
-def DL_prime(token, debug): #Decleration List Prime
-    if debug == 1:
-        print(rat_rules(13))    
-    pass
-
-#R15
-def parse_declaration(token, debug): #Decleration
-    if debug == 1:
-        print(rat_rules(14))    
-    pass
-
-#R16
-def parse_id(token, debug): #id
-    if debug == 1:
-        print(rat_rules(15))    
-    pass
-
-#R17
-def id_prime(token, debug): #id Prime
-    if debug == 1:
-        print(rat_rules(16))    
-    pass
-
-#R18
-def SL(token, debug): #Statelement List
-    if debug == 1:
-        print(rat_rules(17))    
-    pass
-
-#R19
-def SL_prime(token, debug): #Statelement List Prime
-    if debug == 1:
-        print(rat_rules(18))    
-    pass
-
-#R20 
-def parse_statement(token, debug): #statement
-    if debug == 1:
-        print(rat_rules(19))    
-    pass
-
-#R21 
-def parse_compound(token, debug): #compound
-    if debug == 1:
-        print(rat_rules(20))    
-    pass
-
-#R22
-def parse_assign(token, debug): #Assign
-    if debug == 1:
-        print(rat_rules(21))    
-    pass
-
-#R23
-def parse_if(token, debug): #if
-    if debug == 1:
-        print(rat_rules(22))    
-    pass
-
-#R24
-def if_prime(token, debug): #if prime
-    if debug == 1:
-        print(rat_rules(23))    
-    pass
-
-#R25
-def parse_return(token, debug): #return
-    if debug == 1:
-        print(rat_rules(24))    
-    pass
-
-#R26
-def return_prime(token, debug): #return Prime
-    if debug == 1:
-        print(rat_rules(25))    
-    pass
-
-#R27
-def parse_print(token, debug): #return
-    if debug == 1:
-        print(rat_rules(26))    
-    pass
-
-#R28
-def parse_scan(token, debug): #scan
-    if debug == 1:
-        print(rat_rules(27))    
-    pass
-
-#R29
-def parse_while(token, debug): #while
-    if debug == 1:
-        print(rat_rules(28))    
-    pass
-
-#R30
-def parse_condition(token, debug): #condition
-    if debug == 1:
-        print(rat_rules(29))    
-    pass
-
-#R31 
-def parse_relop(token, debug): #relop
-    if debug == 1:
-        print(rat_rules(30))    
-    pass
-
-#R32 
-def parse_expression(token, debug): #Expression
-    if debug == 1:
-        print(rat_rules(31))    
-    pass
-
-#R33
-def EP(token, debug): #Expression Prime
-    if debug == 1:
-        print(rat_rules(32))    
-    pass
-
-#R34
-def parse_term(token, debug): #Term
-    if debug == 1:
-        print(rat_rules(33))    
-    pass
-
-#R35
-def TP(token, debug): #Term Prime
-    if debug == 1:
-        print(rat_rules(34))    
-    pass
-
-#R36
-def parse_factor(token, debug): #factor
-    if debug == 1:
-        print(rat_rules(35))    
-    pass
-
-#R37
-def parse_primary(token, debug): #primary
-    if debug == 1:
-        print(rat_rules(36))    
-    pass
-
-#R38
-def PP(token, debug): #primary Prime
-    if debug == 1:
-        print(rat_rules(37))    
-    pass
-
-#R39
-def null(token, debug): #Empty
-    if debug == 1:
-        print(rat_rules(38))    
-    pass
-
-
-# =========================
-# END OF PARSE
-# =========================
-
-
-def main():
-    
-    lexar = lexar_component.lexar_call
-    me1 = file_read.syntax_testcase() #Classic testcase to see if this works, can change filename in file_read.py
-    token = lexar(me1) # If you wish to modify this to try out different testcases, change file_read.syntax_testcase() in me1 to file_read.file_read()
-    light = switch()
-
-    rat25s(token, light)
-    print(token,light)
-
-if __name__ == "__main__":
-    main()
+def parseStatementListPrime():
+    if current_token in ['Identifier', 'KEYWORD']:
+        if debug:
+            print("<Statement List Prime> -> <Statement> <Statement List Prime>")
+        parseStatement()
+        parseStatementListPrime()
+    else:
+        if debug:
+            print("<Statement List Prime> -> ε")
 
 
 
-# Notes:
-# <Error> Is just something I thought we can use to check
+def parseStatement():
+    if debug:
+        print("<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>")
+    if current_token == 'Identifier':
+        parseAssign()
+    elif current_token == 'KEYWORD':
+        if current_lexeme == 'if':
+            parseIf()
+        elif current_lexeme == 'while':
+            parseWhile()
+        elif current_lexeme == 'return':
+            parseReturn()
+        elif current_lexeme == 'scan':
+            parseScan()
+        elif current_lexeme == 'print':
+            parsePrint()
+        else:
+            syntax_error("Expected valid statement keyword")
+    elif current_lexeme == '{':
+        if debug:
+            print("<Statement> -> <Block>")
+        parseBody()
+    else:
+        syntax_error("Expected a statement")
+
+def parseAssign():
+    if debug:
+        print("<Assign> -> <Identifier> = <Expression> ;")
+    match('Identifier')
+    match('OPERATOR')  # =
+    parseExpression()
+    match('SEPARATOR')  # ;
+
+def parseIf():
+    if debug:
+        print("<If> -> if ( <Condition> ) <Statement> endif")
+    match('KEYWORD')  # if
+    match('SEPARATOR')  # (
+    parseCondition()
+    match('SEPARATOR')  # )
+    parseStatement()
+    match('KEYWORD')  # endif
+
+def parseWhile():
+    if debug:
+        print("<While> -> while ( <Condition> ) <Statement> endwhile")
+    match('KEYWORD')  # while
+    match('SEPARATOR')  # (
+    parseCondition()
+    match('SEPARATOR')  # )
+    parseStatement()
+    match('KEYWORD')  # endwhile
+
+def parseReturn():
+    if debug:
+        print("<Return> -> return <Expression> ;")
+    match('KEYWORD')  # return
+    parseExpression()
+    match('SEPARATOR')  # ;
+
+def parseScan():
+    if debug:
+        print("<Scan> -> scan ( <IDs> ) ;")
+    match('KEYWORD')  # scan
+    match('SEPARATOR')  # (
+    parseIDs()
+    match('SEPARATOR')  # )
+    match('SEPARATOR')  # ;
+
+def parsePrint():
+    if debug:
+        print("<Print> -> print ( <IDs> ) ;")
+    match('KEYWORD')  # print
+    match('SEPARATOR')  # (
+    parseIDs()
+    match('SEPARATOR')  # )
+    match('SEPARATOR')  # ;
+
+def parseCondition():
+    if debug:
+        print("<Condition> -> <Expression> <Relop> <Expression>")
+    parseExpression()
+    parseRelop()
+    parseExpression()
+
+def parseRelop():
+    if debug:
+        print("<Relop> -> == | != | > | < | <= | =>")
+    if current_lexeme in ['==', '!=', '>', '<', '<=', '=>']:
+        match('OPERATOR')
+    else:
+        syntax_error("Relational operator expected")
+
+def parseExpression():
+    if debug:
+        print("<Expression> -> <Term> <Expression Prime>")
+    parseTerm()
+    parseExpressionPrime()
+
+def parseExpressionPrime():
+    if current_lexeme in ['+', '-']:
+        if debug:
+            print("<Expression Prime> -> + <Term> <Expression Prime> | - <Term> <Expression Prime>")
+        match('OPERATOR')
+        parseTerm()
+        parseExpressionPrime()
+    else:
+        if debug:
+            print("<Expression Prime> -> ε")
+
+def parseTerm():
+    if debug:
+        print("<Term> -> <Factor> <Term Prime>")
+    parseFactor()
+    parseTermPrime()
+
+def parseTermPrime():
+    if current_lexeme in ['*', '/', '%']:
+        if debug:
+            print("<Term Prime> -> * <Factor> <Term Prime> | / <Factor> <Term Prime> | % <Factor> <Term Prime>")
+        match('OPERATOR')
+        parseFactor()
+        parseTermPrime()
+    else:
+        if debug:
+            print("<Term Prime> -> ε")
+
+def parseFactor():
+    if debug:
+        print("<Factor> -> - <Primary> | <Primary>")
+    if current_lexeme == '-':
+        match('OPERATOR')
+        parsePrimary()
+    else:
+        parsePrimary()
+
+def parsePrimary():
+    if debug:
+        print("<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )")
+    if current_token == 'Identifier':
+        match('Identifier')
+    elif current_token in ['Integer', 'Real']:
+        match(current_token)
+    elif current_lexeme == '(':
+        match('SEPARATOR')
+        parseExpression()
+        match('SEPARATOR')  # )
+    else:
+        syntax_error("Expected primary expression")
