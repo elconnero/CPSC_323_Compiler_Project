@@ -81,265 +81,302 @@ def rat_rules(rule_number):
 # =========================
 
 #R1
-def rat25s(token, flicker):
-    if flicker == 1:
+def rat25s(token, debug):
+    if debug == 1:
         print(rat_rules(0))
 
-    if token[0] != ('$$', 'SEPARATOR'): 
+    if not token or token[0] != ('$$', 'SEPARATOR'):
         return "<ERROR>, $$ MISSING" # I am not sure if this is the right thing to do, but we are going to go forward. 
     token.pop(0)
     
     if token[0] == ('function', 'KEYWORD'):
-        OFD(token, flicker)
+        OFD(token, debug) 
 
-    if token[0] == None:
-        return None # I have this here because OFD and ODL both have an empty option. , The more I think of it, this really might not be the best option. 
+    if not token:
+        return "<ERROR>, Unexpected end of input" # I have this here because OFD and ODL both have an empty option. , The more I think of it, this really might not be the best option. 
     else:
         return "<ERROR>, Lost in EMPTY From R1"
 
 #R2
-def OFD(token, flicker): # Opt Function Definitions
+def OFD(token, debug): # Opt Function Definitions
 
-    if flicker == 1:
+    if debug == 1:
         print(f'{rat_rules(1)} .1')    
 
-    parse_function(token, flicker)
+    if token and token[0] == ('function', 'KEYWORD'):
+        FD(token, debug)  # R2.1: parse functions
+    else:
+        if debug == 1:
+            print(f'{rat_rules(1)} .2 <Empty>')
+        # R2.2: empty production, do nothing
+        return
 
 #R3
-def FD(token, flicker): #Function Definitions
-    if flicker == 1:
+def FD(token, debug): #Function Definitions
+    if debug == 1:
         print(rat_rules(2))    
     
+    parse_function(token, debug)   # <Function>
+    FD_prime(token, debug)         # <Function Definitions Prime>
 #R4
-def FD_prime(token, flicker): #Function Definitions Prime
-    if flicker == 1:
-        print(rat_rules(3))    
-    pass
+def FD_prime(token, debug): #Function Definitions Prime
+    if debug == 1:
+        print(rat_rules(3))
+
+    if token and token[0] == ('function', 'KEYWORD'):
+        if debug == 1:
+            print(f'{rat_rules(3)}.1')  # Recursion
+        FD(token, debug)  # Recurse
+    else:
+        if debug == 1:
+            print(f'{rat_rules(3)}.2 <Empty>')
+        return  # epsilon
 
 #R5
-def parse_function(token, flicker): #function
-    if flicker == 1:
+def parse_function(token, debug): #function
+    if debug == 1:
         print(rat_rules(4))    
+
+    if not token or token[0] != ('function', 'KEYWORD'):
+        return "<ERROR>, 'function' keyword expected"
+    token.pop(0)  # consume 'function'
+
+    if not token or token[0][1] != 'IDENTIFIER':
+        return "<ERROR>, function name expected"
+    token.pop(0)  # consume identifier
+
+    if not token or token[0] != ('(', 'SEPARATOR'):
+        return "<ERROR>, '(' expected after function name"
+    token.pop(0)  # consume '('
+
+    # Assume OPL() handles both empty and full param list
+    OPL(token, debug)
+
+    if not token or token[0] != (')', 'SEPARATOR'):
+        return "<ERROR>, ')' expected after parameters"
+    token.pop(0)  # consume ')'
+
+    # TODO: call ODL (Opt Declaration List) and Body when ready
+    # ODL(token, debug)
+    # Body(token, debug)
 
     token.pop(0)
     if token[1] == 'IDENTIFIER':
         if token[0] == ('(', 'SEPARATOR'):
-            OPL(token, flicker) # We have a check for ')' if empty at OPL. Make sure we have a backup plan if there are conents within there.
+            OPL(token, debug) # We have a check for ')' if empty at OPL. Make sure we have a backup plan if there are conents within there.
 
 #R6
-def OPL(token, flicker): # Opt Parameter List
-    if flicker == 1:
+def OPL(token, debug): # Opt Parameter List
+    if debug == 1:
         print(rat_rules(5))    
     
     token.pop(0)
     if token[0] == (')', 'SEPARATOR'): #This is my version of empty.
         token.pop(0)
-        ODL(token,flicker)
+        ODL(token,debug)
 
-    PL(token, flicker)
+    PL(token, debug)
     
-    
-
 
 #R7
-def PL(token, flicker): #Parameter List
-    if flicker == 1:
+def PL(token, debug): #Parameter List
+    if debug == 1:
         print(rat_rules(6))
     pass
 
-    parse_parameter(token, flicker)
-    PL_prime(token, flicker)
+    parse_parameter(token, debug)
+    PL_prime(token, debug)
 
 #R8
-def PL_prime(token, flicker): #Parameter List Prime
-    if flicker == 1:
+def PL_prime(token, debug): #Parameter List Prime
+    if debug == 1:
         print(rat_rules(7))
     pass
 
 #R9
-def parse_parameter(token, flicker): #Parameter
-    if flicker == 1:
+def parse_parameter(token, debug): #Parameter
+    if debug == 1:
         print(rat_rules(8))    
     pass
     #This is where you last left off.
 
 #R10
-def parse_qualifier(token, flicker): #qualifier
-    if flicker == 1:
+def parse_qualifier(token, debug): #qualifier
+    if debug == 1:
         print(rat_rules(9))    
     pass
 
 #R11 
-def parse_body(token, flicker): #Body
-    if flicker == 1:
+def parse_body(token, debug): #Body
+    if debug == 1:
         print(rat_rules(10))    
     pass
 
 #R12
-def ODL(token, flicker): #Opt Decleration List
-    if flicker == 1:
+def ODL(token, debug): #Opt Decleration List
+    if debug == 1:
         print(rat_rules(11))    
     pass
 
 #R13
-def DL(token, flicker): #Decleration List
-    if flicker == 1:
+def DL(token, debug): #Decleration List
+    if debug == 1:
         print(rat_rules(12))    
     pass
 
 #R14
-def DL_prime(token, flicker): #Decleration List Prime
-    if flicker == 1:
+def DL_prime(token, debug): #Decleration List Prime
+    if debug == 1:
         print(rat_rules(13))    
     pass
 
 #R15
-def parse_declaration(token, flicker): #Decleration
-    if flicker == 1:
+def parse_declaration(token, debug): #Decleration
+    if debug == 1:
         print(rat_rules(14))    
     pass
 
 #R16
-def parse_id(token, flicker): #id
-    if flicker == 1:
+def parse_id(token, debug): #id
+    if debug == 1:
         print(rat_rules(15))    
     pass
 
 #R17
-def id_prime(token, flicker): #id Prime
-    if flicker == 1:
+def id_prime(token, debug): #id Prime
+    if debug == 1:
         print(rat_rules(16))    
     pass
 
 #R18
-def SL(token, flicker): #Statelement List
-    if flicker == 1:
+def SL(token, debug): #Statelement List
+    if debug == 1:
         print(rat_rules(17))    
     pass
 
 #R19
-def SL_prime(token, flicker): #Statelement List Prime
-    if flicker == 1:
+def SL_prime(token, debug): #Statelement List Prime
+    if debug == 1:
         print(rat_rules(18))    
     pass
 
 #R20 
-def parse_statement(token, flicker): #statement
-    if flicker == 1:
+def parse_statement(token, debug): #statement
+    if debug == 1:
         print(rat_rules(19))    
     pass
 
 #R21 
-def parse_compound(token, flicker): #compound
-    if flicker == 1:
+def parse_compound(token, debug): #compound
+    if debug == 1:
         print(rat_rules(20))    
     pass
 
 #R22
-def parse_assign(token, flicker): #Assign
-    if flicker == 1:
+def parse_assign(token, debug): #Assign
+    if debug == 1:
         print(rat_rules(21))    
     pass
 
 #R23
-def parse_if(token, flicker): #if
-    if flicker == 1:
+def parse_if(token, debug): #if
+    if debug == 1:
         print(rat_rules(22))    
     pass
 
 #R24
-def if_prime(token, flicker): #if prime
-    if flicker == 1:
+def if_prime(token, debug): #if prime
+    if debug == 1:
         print(rat_rules(23))    
     pass
 
 #R25
-def parse_return(token, flicker): #return
-    if flicker == 1:
+def parse_return(token, debug): #return
+    if debug == 1:
         print(rat_rules(24))    
     pass
 
 #R26
-def return_prime(token, flicker): #return Prime
-    if flicker == 1:
+def return_prime(token, debug): #return Prime
+    if debug == 1:
         print(rat_rules(25))    
     pass
 
 #R27
-def parse_print(token, flicker): #return
-    if flicker == 1:
+def parse_print(token, debug): #return
+    if debug == 1:
         print(rat_rules(26))    
     pass
 
 #R28
-def parse_scan(token, flicker): #scan
-    if flicker == 1:
+def parse_scan(token, debug): #scan
+    if debug == 1:
         print(rat_rules(27))    
     pass
 
 #R29
-def parse_while(token, flicker): #while
-    if flicker == 1:
+def parse_while(token, debug): #while
+    if debug == 1:
         print(rat_rules(28))    
     pass
 
 #R30
-def parse_condition(token, flicker): #condition
-    if flicker == 1:
+def parse_condition(token, debug): #condition
+    if debug == 1:
         print(rat_rules(29))    
     pass
 
 #R31 
-def parse_relop(token, flicker): #relop
-    if flicker == 1:
+def parse_relop(token, debug): #relop
+    if debug == 1:
         print(rat_rules(30))    
     pass
 
 #R32 
-def parse_expression(token, flicker): #Expression
-    if flicker == 1:
+def parse_expression(token, debug): #Expression
+    if debug == 1:
         print(rat_rules(31))    
     pass
 
 #R33
-def EP(token, flicker): #Expression Prime
-    if flicker == 1:
+def EP(token, debug): #Expression Prime
+    if debug == 1:
         print(rat_rules(32))    
     pass
 
 #R34
-def parse_term(token, flicker): #Term
-    if flicker == 1:
+def parse_term(token, debug): #Term
+    if debug == 1:
         print(rat_rules(33))    
     pass
 
 #R35
-def TP(token, flicker): #Term Prime
-    if flicker == 1:
+def TP(token, debug): #Term Prime
+    if debug == 1:
         print(rat_rules(34))    
     pass
 
 #R36
-def parse_factor(token, flicker): #factor
-    if flicker == 1:
+def parse_factor(token, debug): #factor
+    if debug == 1:
         print(rat_rules(35))    
     pass
 
 #R37
-def parse_primary(token, flicker): #primary
-    if flicker == 1:
+def parse_primary(token, debug): #primary
+    if debug == 1:
         print(rat_rules(36))    
     pass
 
 #R38
-def PP(token, flicker): #primary Prime
-    if flicker == 1:
+def PP(token, debug): #primary Prime
+    if debug == 1:
         print(rat_rules(37))    
     pass
 
 #R39
-def null(token, flicker): #Empty
-    if flicker == 1:
+def null(token, debug): #Empty
+    if debug == 1:
         print(rat_rules(38))    
     pass
 
