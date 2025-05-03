@@ -1,6 +1,0 @@
-integer a;
-a = 10;
-if (a < 20) a = 12.34;
-endif
-
-[*syntax test*]

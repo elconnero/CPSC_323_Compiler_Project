@@ -1,0 +1,17 @@
+Token		Lexeme
+Identifier	a
+OPERATOR  	=
+Identifier	0.99
+SEPARATOR 	;
+Identifier	b
+OPERATOR  	=
+Identifier	.25
+SEPARATOR 	;
+Identifier	c
+OPERATOR  	=
+Identifier	10.
+SEPARATOR 	;
+Identifier	d
+OPERATOR  	=
+Identifier	23.00
+SEPARATOR 	;

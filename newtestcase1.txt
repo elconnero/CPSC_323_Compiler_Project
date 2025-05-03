@@ -1,0 +1,30 @@
+$$
+$$
+integer x;
+integer y;
+integer z;
+real pi;
+real radius;
+real area;
+$$
+x = 10;
+y = 20;
+z = x + y;
+pi = 3.14159;
+radius = 5.0;
+area = pi * radius * radius;
+x = x + 1;
+y = y - 5;
+z = x * y;
+x = z / 2;
+radius = radius + 1;
+area = area - 10.5;
+pi = pi * 2;
+x = 100;
+y = 200;
+z = x + y;
+radius = 10.0;
+area = pi * radius * radius;
+$$
+
+[*syntax test*]

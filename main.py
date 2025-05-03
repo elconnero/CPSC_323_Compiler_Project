@@ -4,23 +4,34 @@
 # Team Leader : Conner Robbins
 # Class       : CPSC-323-07 13801
 # Professor   : James S. Choi, Ph.D.
-# Date        : None
-# Due         : None
-# Assignment  : None
-# Main file where all .py's meet. 
+# Date        : 20250220
+# Due         : 20250406
+# Assignment  : 2
 
-import lexar_component, syntax, file_read
-
+import lexar_component
+import syntax
+import file_read
+import os
+import sys
+from utils import get_base_dir
 
 def main():
 
-    lexar = lexar_component.lexar_call
+    # Get the source code using file_read module
+    filename = file_read.user_selection()                                       # This is where user will make selection on what type of file they wish to select. 
+    source_code = file_read.read_source_file(filename)                          # Once selected, .txt file will get sent back to actually read file. 
 
-    test = lexar("<")
-    print(test)
+    # === Lexer ===
+    tokens = lexar_component.lexar_call(source_code)                            # Get list of tokens and what not. 
 
-    hello = file_read.file_read()
-    test = lexar(hello)
-    print(test)
+    # Create lexer output file in the same directory as the input file
+    base_dir = get_base_dir()
+
+    #Outputting file
+    file_read.file_output(1,filename, tokens)
+
+    
+    syntax.run_parser_with_tokens(tokens, filename)
+
 if __name__ == "__main__":
     main()

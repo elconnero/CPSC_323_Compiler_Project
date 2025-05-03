@@ -5,11 +5,10 @@
 #Class       : CPSC-323-07 13801
 #Professor   : James S. Choi, Ph.D.
 #Date        : 20250212
-#Due         : 20250302
-#Assignment  : 1
+#Due         : 20250406
+#Assignment  : 2
 
 from collections import deque
-import file_read
 
 # Global Variables:
 reserved_words = {
@@ -23,21 +22,27 @@ reserved_words = {
     "operator":  ["+", "-", "*", "/", "%", "<", ">", "=", "&", "!"],
     #               0     1
     "comment":   ["[*", "*]"],
-    #              0      1     2    3     4     5
+    #
     "mash_opp":  ["==", "!=", "<=", "=>", "+=", "-="]
 }
 
+
+# Old code, should delete. 
 files = [
-    "source_rat25s.txt",
-    "testcase1.txt",
-    "testcase2.txt",
-    "enter manuel file.txt"
-]
+        "newtestcase1.txt",
+        "newtestcase2.txt",
+        "newtestcase3.txt",
+        "sample_rat25s.txt",
+        "enter manuel file.txt"
+    ]
 
 # =========================
 # Function Libs
 # =========================
 
+
+
+# Old code, should delete. 
 def user_selection():
     
     for i in range(len(files)):
@@ -73,14 +78,20 @@ def read_source_file(filename):
 
 # Returns token type based on a code number.
 def token_giver(code):
-    types = {1: "KEYWORD", 2: "OPERATOR", 3: "SEPARATOR", 4: "UNDEFINED"}
+    types = {
+        1: "KEYWORD",
+        2: "OPERATOR",
+        3: "SEPARATOR",
+        4: "Identifier",
+        5: "Integer",
+        6: "Real",
+        7: "UNDEFINED"
+    }
     return types.get(code, "UNKNOWN")
 
-# Updated queue_hub function that tokenizes the input.
-# This version includes a fix so that a dot ('.') is appended to a number token
 # if it appears between digits (e.g., "23.00" stays as one token).
 def queue_hub(user_input):
-    token = ""
+    token       = ""
     token_queue = deque()
     # Create a queue of characters from the input string.
     queue = deque(user_input.strip())
@@ -88,11 +99,24 @@ def queue_hub(user_input):
     while queue:
         char = queue.popleft()
 
+        # Special check for "$$"
+        if char == '$' and queue and queue[0] == '$':
+            # If there is an unfinished token, finalize it first.
+            if token:
+                if token in reserved_words["keywords"]:
+                    token_queue.append((token, token_giver(1)))
+                else:
+                    token_queue.append((token, token_giver(4)))
+                token = ""
+            # Consume the second '$'
+            queue.popleft()
+            token_queue.append(('$$', token_giver(3)))
+            continue
+
         # Skip Comments
         if char == "[" and queue and queue[0] == "*":
             # Skip the '*'
             queue.popleft()  
-
             # Continue popping until the end of the comment is found
             while queue:
                 next_char = queue.popleft()
@@ -124,7 +148,7 @@ def queue_hub(user_input):
                 else:
                     token_queue.append((token, token_giver(4)))
                 token = ""
-            # Now handle the reserved character.
+            # handles the reserved character.
             if char in reserved_words["operator"]:
                 token_queue.append((char, token_giver(2)))
             elif char in reserved_words["seperator"]:
@@ -145,24 +169,24 @@ def queue_hub(user_input):
 def operator_smasher(token_list):
     x = 0
     while x < len(token_list) - 1:
-        if token_list[x][1] == 'OPERATOR' and token_list[x][0] in reserved_words["mash_opp"]:
-            x += 1 
-        elif token_list[x][1] == 'OPERATOR' and token_list[x+1][1] == 'OPERATOR':
-            smash = token_list[x][0] + token_list[x+1][0]
-            if smash in reserved_words["mash_opp"]:
-                token_list[x] = (smash, 'OPERATOR')
+        t1, t1_type = token_list[x]
+        t2, t2_type = token_list[x+1]
+
+        # Combine two OPERATORs (like < + = → <=)
+        if t1_type == 'OPERATOR' and t2_type == 'OPERATOR':
+            combined = t1 + t2
+            if combined in reserved_words["mash_opp"]:
+                token_list[x] = (combined, 'OPERATOR')
                 del token_list[x+1]
-            else:
-                x += 1
-        elif token_list[x][1] == 'SEPARATOR' and token_list[x+1][1] == 'SEPARATOR':
-            smash = token_list[x][0] + token_list[x+1][0]
-            if smash in reserved_words["mash_sep"]:
-                token_list[x] = (smash, 'SEPARATOR')
+                continue  # stay at same index to recheck
+        # Combine two SEPARATORs (like $ + $ → $$)
+        elif t1_type == 'SEPARATOR' and t2_type == 'SEPARATOR':
+            combined = t1 + t2
+            if combined in reserved_words["mash_sep"]:
+                token_list[x] = (combined, 'SEPARATOR')
                 del token_list[x+1]
-            else:
-                x += 1
-        else:
-            x += 1
+                continue
+        x += 1
     return token_list
 
 # =========================
@@ -279,7 +303,7 @@ def lex_hub(token_record):
                         refined_tokens.append((tok, "IDENTIFIER"))
                 else:
                     refined_tokens.append((tok, "ERROR"))
-                    # return "COMPILATION ERROR" ### Might Need to rip this out
+                    # return "COMPILATION ERROR" 
 
 
             elif tok[0].isdigit():
@@ -295,10 +319,10 @@ def lex_hub(token_record):
                         refined_tokens.append((tok, "INTEGER"))
                     else:
                         refined_tokens.append((tok, "ERROR"))
-                        # return "COMPILATION ERROR" ### Might Need to rip this out
+                        # return "COMPILATION ERROR"
             else:
                 refined_tokens.append((tok, "ERROR"))
-                # return "COMPILATION ERROR" ### Might Need to rip this out
+                # return "COMPILATION ERROR" 
         else:
             refined_tokens.append((tok, tok_type))
     return refined_tokens
@@ -310,36 +334,18 @@ def lexer(token_list):
     for token in token_list:
         yield token
 
-# This is called by main.py
-# For assignment 2, we will also use this for testing. 
-def lexar_call(source_code): 
-    
-    token_record = queue_hub(source_code)
-    token_record = operator_smasher(token_record)
-    refined_tokens = lex_hub(token_record)
-    return refined_tokens
-
-
-# Notes for Lexar Call:
-# Should we make it input an element at a time
-# Or should we make it injest a file at a time?
-# I think this is something that we should really chat about.
-# To save time and all that, I am just going to make it the way
-# We do it for the lexar.py
-
-
 # =========================
 # Main Function
 # =========================
-def main(): # Trouble shooting area
+def main():
 
     keep_going = True
     while keep_going:
         # Letting user check which testcase they would like or enter manuel code.
-        intake = user_selection() # Might be able to get rid of these, we created a new .py so we might be able to get rid of these. Keeping in for now. 
+        intake = user_selection()
 
         # Read source code from file.
-        source_code = read_source_file(intake) # Might be able to get rid of these, we created a new .py so we might be able to get rid of these. Keeping in for now.
+        source_code = read_source_file(intake)
         
         # Tokenize the input.
         token_record = queue_hub(source_code)
@@ -384,6 +390,14 @@ def main(): # Trouble shooting area
                 print("Invalid input. Please enter a number (1 or 2).\n")
             
             input("Press Enter to continue\n")
+
+# This function is required by main.py
+def lexar_call(source_code):
+    token_record   = queue_hub(source_code)          # Recieves source code from main.
+    token_record   = operator_smasher(token_record)
+    refined_tokens = lex_hub(token_record)
+    return refined_tokens
                     
+
 if __name__ == "__main__":
-    main()
+    pass
