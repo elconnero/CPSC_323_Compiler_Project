@@ -5,8 +5,8 @@
 # Class       : CPSC-323-07 13801
 # Professor   : James S. Choi, Ph.D.
 # Date        : 20250220
-# Due         : 20250406
-# Assignment  : 2
+# Due         : 20250510
+# Assignment  : 3
 
 import lexar_component
 import syntax

@@ -7,7 +7,7 @@ files = [
     "newtestcase1.txt",      #1
     "newtestcase2.txt",      #2
     "newtestcase3.txt",      #3        
-    "enter manuel file name" #4 
+    "enter manual file name" #4 
     # Make sure that this is the last file, because of the code we have below, this will take an input from the user.
 ] # Can enter any types of test cases for the final, we should have many different types that the user may enter. 
 
