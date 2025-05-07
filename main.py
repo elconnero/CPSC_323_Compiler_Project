@@ -8,12 +8,7 @@
 # Due         : 20250406
 # Assignment  : 2
 
-import lexar_component
-import syntax
-import file_read
-import os
-import sys
-from utils import get_base_dir
+import lexar_component, syntax, file_read
 
 def main():
 
@@ -23,15 +18,19 @@ def main():
 
     # === Lexer ===
     tokens = lexar_component.lexar_call(source_code)                            # Get list of tokens and what not. 
+    type(tokens)
 
     # Create lexer output file in the same directory as the input file
-    base_dir = get_base_dir()
-
     #Outputting file
     file_read.file_output(1,filename, tokens)
+ 
+     # === Syntax ===
+    TFswitch, output_filename = syntax.run_parser_with_tokens(tokens, filename)
+
+    print(f"Syntax analyzer result  : {TFswitch}")
+    print(f"Parser output written to: {output_filename}")
 
     
-    syntax.run_parser_with_tokens(tokens, filename)
 
 if __name__ == "__main__":
     main()
