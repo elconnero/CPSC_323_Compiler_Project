@@ -8,6 +8,7 @@ current_token = None
 current_lexeme = None
 token_index = 0
 tokens = []
+result = True
 
 # Debug switch
 debug = True
@@ -40,21 +41,33 @@ def match(expected_token):
 
 # Handle unexpected syntax
 def syntax_error(expected):
+    global result
     print(f"Syntax Error: Expected {expected}, but found {current_token} ('{current_lexeme}')")
+    result = False
     exit(1)
 
 # Start symbol for RAT25S grammar
 def parseRat25S():
+
+    global result
     print("<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$")
-    match('SEPARATOR')  # Making sure this is $$
+    match('SEPARATOR') 
+
     parseOptFunctionDefinitions()
-    match('SEPARATOR')  
+    match('SEPARATOR')  #$$
+
     parseOptDeclarationList()
     match('SEPARATOR')  
+
     parseStatementList()
     match('SEPARATOR')  
 
-                        #  tokens  | filename.txt   
+    if result == True:
+        return result
+    else:
+        return result
+ 
+
 def run_parser_with_tokens(tok_list, filename):
     global tokens, token_index, current_token, current_lexeme
     tokens = tok_list
@@ -74,10 +87,10 @@ def run_parser_with_tokens(tok_list, filename):
 
     with open(output_filename, "w") as f:
         sys.stdout = f
-        parseRat25S()
+        result = parseRat25S()
         sys.stdout = sys.__stdout__ 
 
-    print(f"Parser output written to: {output_filename}")
+    return result, output_filename
 
 
 
@@ -119,7 +132,7 @@ def parseFunction():
     match('SEPARATOR')  # (
     parseOptParameterList()
     match('SEPARATOR')  # )
-    parseOptDeclarationList()
+    parseOptDeclarationList() #TC
     parseBody()
 
 def parseOptParameterList():
@@ -163,9 +176,8 @@ def parseQualifier():
     else:
         syntax_error("Qualifier (integer, boolean, real) expected")
 
-
-
 def parseOptDeclarationList():
+
     if debug:
         print("<Opt Declaration List> -> <Declaration List> | epsilon")
     
@@ -202,16 +214,21 @@ def parseDeclaration():
 def parseIDs():
     if debug:
         print("<IDs> -> <Identifier> <IDs Prime>")
+    #Make sure to delete:
+    print(f"Line 211 | Current_Token = {current_token} || Current_Lexeme = {current_lexeme}")
+    #Make sure to delete:
     match('Identifier')
     parseIDsPrime()
 
 def parseIDsPrime():
+    
     if current_lexeme == ',':
         if debug:
             print("<IDs Prime> -> , <Identifier> <IDs Prime>")
         match('SEPARATOR')  # ,
-        match('Identifier')
-         
+        match('Identifier')     
+        parseIDsPrime()
+    
     else:
         if debug:
             print("<IDs Prime> -> epsilon")
@@ -222,6 +239,7 @@ def parseBody():
     match('SEPARATOR')  # {
     parseStatementList()
     match('SEPARATOR')  # }
+    
 
 def parseStatementList():
     if debug:
@@ -239,15 +257,14 @@ def parseStatementListPrime():
         if debug:
             print("<Statement List Prime> -> epsilon")
 
-
-
 def parseStatement():
     if debug:
         print("<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>")
     if current_token == 'Identifier':
         parseAssign()
     elif current_token == 'KEYWORD':
-        if current_lexeme == 'if':
+        if current_lexeme in ('if', 'else', 'endif'):
+            #print(f"Why God | current lexeme = {current_lexeme} , current token = {current_token}")
             parseIf()
         elif current_lexeme == 'while':
             parseWhile()
@@ -270,6 +287,7 @@ def parseAssign():
     if debug:
         print("<Assign> -> <Identifier> = <Expression> ;")
     match('Identifier')
+    # Need to fill in comma here
     match('OPERATOR')  # =
     parseExpression()
     match('SEPARATOR')  # ;
@@ -277,12 +295,22 @@ def parseAssign():
 def parseIf():
     if debug:
         print("<If> -> if ( <Condition> ) <Statement> endif")
-    match('KEYWORD')  # if
-    match('SEPARATOR')  # (
-    parseCondition()
-    match('SEPARATOR')  # )
-    parseStatement()
-    match('KEYWORD')  # endif
+    
+    if current_lexeme == 'if':
+        match('KEYWORD')  # if
+        match('SEPARATOR')  # (
+        parseCondition()
+        match('SEPARATOR')  # )
+        parseStatement()
+    elif current_lexeme == 'else':
+        match('KEYWORD')  # else
+        parseStatement()
+    else:
+        match('KEYWORD')  # endif
+
+def parseElse():
+    if debug:
+        print("")
 
 def parseWhile():
     if debug:
@@ -298,8 +326,11 @@ def parseReturn():
     if debug:
         print("<Return> -> return <Expression> ;")
     match('KEYWORD')  # return
-    parseExpression()
-    match('SEPARATOR')  # ;
+    if current_token == "SEPARATOR" and current_lexeme == ";":
+        match('SEPARATOR')
+    else:
+        parseExpression()
+        match('SEPARATOR')  # ;
 
 def parseScan():
     if debug:
@@ -315,7 +346,7 @@ def parsePrint():
         print("<Print> -> print ( <IDs> ) ;")
     match('KEYWORD')  # print
     match('SEPARATOR')  # (
-    parseIDs()
+    parseExpression()  
     match('SEPARATOR')  # )
     match('SEPARATOR')  # ;
 
@@ -382,11 +413,27 @@ def parsePrimary():
         print("<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )")
     if current_token == 'Identifier':
         match('Identifier')
-    elif current_token in ['Integer', 'Real']:
-        match(current_token)
+        parsePrimaryPrime()  # ✅ this is missing or broken in your current version
+    elif current_token == 'Integer':
+        match('Integer')
+    elif current_token == 'Real':
+        match('Real')
+    elif current_lexeme == 'true' or current_lexeme == 'false':
+        match('KEYWORD')  # assuming you classify booleans as keywords
     elif current_lexeme == '(':
-        match('SEPARATOR')
+        match('SEPARATOR')  # (
         parseExpression()
         match('SEPARATOR')  # )
     else:
-        syntax_error("Expected primary expression")
+        syntax_error("Invalid primary")
+
+def parsePrimaryPrime():
+    if current_lexeme == '(':
+        if debug:
+            print("<Primary Prime> -> ( <IDs> )")
+        match('SEPARATOR')  # (
+        parseIDs()
+        match('SEPARATOR')  # )
+    else:
+        if debug:
+            print("<Primary Prime> -> epsilon")
