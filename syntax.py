@@ -2,6 +2,7 @@ import sys
 import os
 from lexar_component import user_selection, read_source_file, queue_hub, lexer, operator_smasher
 from utils import get_base_dir
+from symbol_table import symbol_table
 
 # Global variables
 current_token = None
@@ -48,13 +49,9 @@ def syntax_error(expected):
 
 # Start symbol for RAT25S grammar
 def parseRat25S():
-
     global result
-    print("<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$")
+    print("<Rat25S> -> $$ <Opt Declaration List> $$ <Statement List> $$")
     match('SEPARATOR') 
-
-    parseOptFunctionDefinitions()
-    match('SEPARATOR')  #$$
 
     parseOptDeclarationList()
     match('SEPARATOR')  
@@ -66,7 +63,6 @@ def parseRat25S():
         return result
     else:
         return result
- 
 
 def run_parser_with_tokens(tok_list, filename):
     global tokens, token_index, current_token, current_lexeme
@@ -88,23 +84,29 @@ def run_parser_with_tokens(tok_list, filename):
     with open(output_filename, "w") as f:
         sys.stdout = f
         result = parseRat25S()
+        # Print symbol table at the end of parser output
+        symbol_table.print_table()
         sys.stdout = sys.__stdout__ 
 
     return result, output_filename
 
-
-
-def parseOptFunctionDefinitions():
-
+def parseOptDeclarationList():
     if debug:
-        print("<Opt Function Definitions> -> <Function Definitions> | epsilon")
+        print("<Opt Declaration List> -> <Declaration List> | epsilon")
     
-    if current_token == 'KEYWORD' and current_lexeme == 'function':
-        parseFunctionDefinitions()
+    if current_lexeme in ["integer", "boolean"]:  # Removed "real" as per simplified version
+        parseDeclarationList()
     else:
         if debug:
-            print("<Opt Function Definitions> -> epsilon")  # epsilon (empty)
-        return
+            print("<Opt Declaration List> -> epsilon")
+
+def parseQualifier():
+    if debug:
+        print("<Qualifier> -> integer | boolean")  # Removed real
+    if current_lexeme in ['integer', 'boolean']:  # Removed real
+        match('KEYWORD')
+    else:
+        syntax_error("Qualifier (integer, boolean) expected")
 
 def parseFunctionDefinitions():
     if debug:
@@ -168,67 +170,43 @@ def parseParameter():
     match('Identifier')
     parseQualifier()
 
-def parseQualifier():
-    if debug:
-        print("<Qualifier> -> integer | boolean | real")
-    if current_lexeme in ['integer', 'boolean', 'real']:
-        match('KEYWORD')
-    else:
-        syntax_error("Qualifier (integer, boolean, real) expected")
-
-def parseOptDeclarationList():
-
-    if debug:
-        print("<Opt Declaration List> -> <Declaration List> | epsilon")
-    
-    if current_lexeme in ["integer", "boolean", "real"]:
-        parseDeclarationList()
-    else:
-        if debug:
-            print("<Opt Declaration List> -> epsilon")
-
-def parseDeclarationList():
-    if debug:
-        print("<Declaration List> -> <Declaration> ; <Declaration List Prime>")
-    parseDeclaration()
-    match('SEPARATOR')  # ;
-    parseDeclarationListPrime()
-
-def parseDeclarationListPrime():
-    if current_lexeme in ["integer", "boolean", "real"]:
-        if debug:
-            print("<Declaration List Prime> -> <Declaration> ; <Declaration List Prime>")
-        parseDeclaration()
-        match('SEPARATOR')  # ;
-        parseDeclarationListPrime()
-    else:
-        if debug:
-            print("<Declaration List Prime> -> epsilon")
-
-def parseDeclaration():
-    if debug:
-        print("<Declaration> -> <Qualifier> <IDs>")
-    parseQualifier()
-    parseIDs()
-
-def parseIDs():
+def parseIDs(type_name, is_declaration=True):
     if debug:
         print("<IDs> -> <Identifier> <IDs Prime>")
-    #Make sure to delete:
-    print(f"Line 211 | Current_Token = {current_token} || Current_Lexeme = {current_lexeme}")
-    #Make sure to delete:
+    if is_declaration:
+        # Insert the identifier into symbol table
+        success, error = symbol_table.insert(current_lexeme, type_name)
+        if not success:
+            print(f"Error: {error}")
+            syntax_error("Duplicate identifier")
+    else:
+        # Check if identifier exists
+        addr, type_info = symbol_table.lookup(current_lexeme)
+        if addr is None:
+            print(f"Error: Variable '{current_lexeme}' not declared")
+            syntax_error("Undeclared identifier")
     match('Identifier')
-    parseIDsPrime()
+    parseIDsPrime(type_name, is_declaration)
 
-def parseIDsPrime():
-    
+def parseIDsPrime(type_name, is_declaration=True):
     if current_lexeme == ',':
         if debug:
             print("<IDs Prime> -> , <Identifier> <IDs Prime>")
         match('SEPARATOR')  # ,
+        if is_declaration:
+            # Insert the next identifier into symbol table
+            success, error = symbol_table.insert(current_lexeme, type_name)
+            if not success:
+                print(f"Error: {error}")
+                syntax_error("Duplicate identifier")
+        else:
+            # Check if identifier exists
+            addr, type_info = symbol_table.lookup(current_lexeme)
+            if addr is None:
+                print(f"Error: Variable '{current_lexeme}' not declared")
+                syntax_error("Undeclared identifier")
         match('Identifier')     
-        parseIDsPrime()
-    
+        parseIDsPrime(type_name, is_declaration)
     else:
         if debug:
             print("<IDs Prime> -> epsilon")
@@ -286,8 +264,12 @@ def parseStatement():
 def parseAssign():
     if debug:
         print("<Assign> -> <Identifier> = <Expression> ;")
+    identifier = current_lexeme
+    addr, type_info = symbol_table.lookup(identifier)
+    if addr is None:
+        print(f"Error: Variable '{identifier}' not declared")
+        syntax_error("Undeclared identifier")
     match('Identifier')
-    # Need to fill in comma here
     match('OPERATOR')  # =
     parseExpression()
     match('SEPARATOR')  # ;
@@ -337,7 +319,7 @@ def parseScan():
         print("<Scan> -> scan ( <IDs> ) ;")
     match('KEYWORD')  # scan
     match('SEPARATOR')  # (
-    parseIDs()
+    parseIDs("integer", False)  # Not a declaration, just using variables
     match('SEPARATOR')  # )
     match('SEPARATOR')  # ;
 
@@ -412,12 +394,19 @@ def parsePrimary():
     if debug:
         print("<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )")
     if current_token == 'Identifier':
+        # Check if identifier exists in symbol table
+        addr, type_info = symbol_table.lookup(current_lexeme)
+        if addr is None:
+            print(f"Error: Variable '{current_lexeme}' not declared")
+            syntax_error("Undeclared identifier")
         match('Identifier')
         parsePrimaryPrime() 
     elif current_token == 'Integer':
+        # Don't check symbol table for numeric literals
         match('Integer')
     elif current_token == 'Real':
-        match('Real')
+        # Don't allow real numbers in simplified version
+        syntax_error("Real numbers not allowed in simplified version")
     elif current_lexeme == 'true' or current_lexeme == 'false':
         match('KEYWORD')  # assuming you classify booleans as keywords
     elif current_lexeme == '(':
@@ -432,8 +421,33 @@ def parsePrimaryPrime():
         if debug:
             print("<Primary Prime> -> ( <IDs> )")
         match('SEPARATOR')  # (
-        parseIDs()
+        parseIDs("integer")  # Function parameters are always integers in simplified Rat24S
         match('SEPARATOR')  # )
     else:
         if debug:
             print("<Primary Prime> -> epsilon")
+
+def parseDeclarationList():
+    if debug:
+        print("<Declaration List> -> <Declaration> ; <Declaration List Prime>")
+    parseDeclaration()
+    match('SEPARATOR')  # ;
+    parseDeclarationListPrime()
+
+def parseDeclarationListPrime():
+    if current_lexeme in ["integer", "boolean"]:  # Removed real
+        if debug:
+            print("<Declaration List Prime> -> <Declaration> ; <Declaration List Prime>")
+        parseDeclaration()
+        match('SEPARATOR')  # ;
+        parseDeclarationListPrime()
+    else:
+        if debug:
+            print("<Declaration List Prime> -> epsilon")
+
+def parseDeclaration():
+    if debug:
+        print("<Declaration> -> <Qualifier> <IDs>")
+    type_name = current_lexeme  # Store the type before parsing
+    parseQualifier()
+    parseIDs(type_name)

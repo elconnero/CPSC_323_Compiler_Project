@@ -1,2 +1,5 @@
-<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$
-Syntax Error: Expected SEPARATOR, but found KEYWORD ('integer')
+<Rat25S> -> $$ <Opt Declaration List> $$ <Statement List> $$
+Matched: Token: SEPARATOR, Lexeme: $$
+<Opt Declaration List> -> <Declaration List> | epsilon
+<Opt Declaration List> -> epsilon
+Syntax Error: Expected SEPARATOR, but found KEYWORD ('function')

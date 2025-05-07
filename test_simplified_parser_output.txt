@@ -1,0 +1,161 @@
+<Rat25S> -> $$ <Opt Declaration List> $$ <Statement List> $$
+Matched: Token: SEPARATOR, Lexeme: $$
+<Opt Declaration List> -> <Declaration List> | epsilon
+<Declaration List> -> <Declaration> ; <Declaration List Prime>
+<Declaration> -> <Qualifier> <IDs>
+<Qualifier> -> integer | boolean
+Matched: Token: KEYWORD, Lexeme: integer
+<IDs> -> <Identifier> <IDs Prime>
+Matched: Token: Identifier, Lexeme: i
+<IDs Prime> -> , <Identifier> <IDs Prime>
+Matched: Token: SEPARATOR, Lexeme: ,
+Matched: Token: Identifier, Lexeme: max
+<IDs Prime> -> , <Identifier> <IDs Prime>
+Matched: Token: SEPARATOR, Lexeme: ,
+Matched: Token: Identifier, Lexeme: sum
+<IDs Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Declaration List Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: $$
+<Statement List> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Assign> -> <Identifier> = <Expression> ;
+Matched: Token: Identifier, Lexeme: sum
+Matched: Token: OPERATOR, Lexeme: =
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Integer, Lexeme: 0
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Assign> -> <Identifier> = <Expression> ;
+Matched: Token: Identifier, Lexeme: i
+Matched: Token: OPERATOR, Lexeme: =
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Integer, Lexeme: 1
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Scan> -> scan ( <IDs> ) ;
+Matched: Token: KEYWORD, Lexeme: scan
+Matched: Token: SEPARATOR, Lexeme: (
+<IDs> -> <Identifier> <IDs Prime>
+Matched: Token: Identifier, Lexeme: max
+<IDs Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: )
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<While> -> while ( <Condition> ) <Statement> endwhile
+Matched: Token: KEYWORD, Lexeme: while
+Matched: Token: SEPARATOR, Lexeme: (
+<Condition> -> <Expression> <Relop> <Expression>
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: i
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+<Relop> -> == | != | > | < | <= | =>
+Matched: Token: OPERATOR, Lexeme: <
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: max
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: )
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Statement> -> <Block>
+<Body> -> { <Statement List> }
+Matched: Token: SEPARATOR, Lexeme: {
+<Statement List> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Assign> -> <Identifier> = <Expression> ;
+Matched: Token: Identifier, Lexeme: sum
+Matched: Token: OPERATOR, Lexeme: =
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: sum
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> + <Term> <Expression Prime> | - <Term> <Expression Prime>
+Matched: Token: OPERATOR, Lexeme: +
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: i
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Assign> -> <Identifier> = <Expression> ;
+Matched: Token: Identifier, Lexeme: i
+Matched: Token: OPERATOR, Lexeme: =
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: i
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> + <Term> <Expression Prime> | - <Term> <Expression Prime>
+Matched: Token: OPERATOR, Lexeme: +
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Integer, Lexeme: 1
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: }
+Matched: Token: KEYWORD, Lexeme: endwhile
+<Statement List Prime> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Print> -> print ( <IDs> ) ;
+Matched: Token: KEYWORD, Lexeme: print
+Matched: Token: SEPARATOR, Lexeme: (
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: sum
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> + <Term> <Expression Prime> | - <Term> <Expression Prime>
+Matched: Token: OPERATOR, Lexeme: +
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: Identifier, Lexeme: max
+<Primary Prime> -> epsilon
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: )
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: $$
+
+Symbol Table
+Identifier MemoryLocation Type
+i 5000 integer
+max 5001 integer
+sum 5002 integer

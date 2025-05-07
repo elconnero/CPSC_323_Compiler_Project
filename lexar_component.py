@@ -105,6 +105,8 @@ def queue_hub(user_input):
             if token:
                 if token in reserved_words["keywords"]:
                     token_queue.append((token, token_giver(1)))
+                elif token.isdigit():
+                    token_queue.append((token, token_giver(5)))  # Integer
                 else:
                     token_queue.append((token, token_giver(4)))
                 token = ""
@@ -130,39 +132,58 @@ def queue_hub(user_input):
         if char == "\n":
             continue
         
-        # Modification: If the current character is a dot, check if it should be part of a number.
-        if char == ".":
-            # If we already have a token that is all digits and the next character (if any) is also a digit,
-            # then the dot is part of a real number.
-            if token and token.isdigit() and len(queue) > 0 and queue[0].isdigit():
-                token += char
-                continue
-            # Otherwise, treat the dot as a separator (handled below).
-
-        # If the character is whitespace, or a reserved separator (other than our special handling for dot)
-        # or an operator, then finalize the current token.
-        if char == " " or (char in reserved_words["seperator"] and char != ".") or char in reserved_words["operator"]:
+        # If the character is whitespace, or a reserved separator or operator,
+        # then finalize the current token.
+        if char == " " or char in reserved_words["seperator"] or char in reserved_words["operator"]:
             if token:
+                # Check if the current token is a keyword
                 if token in reserved_words["keywords"]:
                     token_queue.append((token, token_giver(1)))
+                elif token.isdigit():
+                    token_queue.append((token, token_giver(5)))  # Integer
                 else:
-                    token_queue.append((token, token_giver(4)))
+                    # Check if the token contains any keywords
+                    found_keyword = False
+                    for keyword in reserved_words["keywords"]:
+                        if token == keyword:
+                            token_queue.append((token, token_giver(1)))
+                            found_keyword = True
+                            break
+                    if not found_keyword:
+                        token_queue.append((token, token_giver(4)))
                 token = ""
             # handles the reserved character.
             if char in reserved_words["operator"]:
                 token_queue.append((char, token_giver(2)))
             elif char in reserved_words["seperator"]:
                 token_queue.append((char, token_giver(3)))
+            elif char != " ":  # If it's not a space, start a new token
+                token = char
         else:
-            # Otherwise, add the character to the current token.
-            token += char
+            # If we have a token and it's a keyword, finalize it
+            if token in reserved_words["keywords"]:
+                token_queue.append((token, token_giver(1)))
+                token = char
+            else:
+                # Otherwise, add the character to the current token.
+                token += char
 
     # Append any token remaining after the loop.
     if token:
         if token in reserved_words["keywords"]:
             token_queue.append((token, token_giver(1)))
+        elif token.isdigit():
+            token_queue.append((token, token_giver(5)))  # Integer
         else:
-            token_queue.append((token, token_giver(4)))
+            # Check if the token contains any keywords
+            found_keyword = False
+            for keyword in reserved_words["keywords"]:
+                if token == keyword:
+                    token_queue.append((token, token_giver(1)))
+                    found_keyword = True
+                    break
+            if not found_keyword:
+                token_queue.append((token, token_giver(4)))
     return list(token_queue)
 
 # Combines adjacent operator tokens (for multi-character operators like "<=")
