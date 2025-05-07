@@ -413,7 +413,7 @@ def parsePrimary():
         print("<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )")
     if current_token == 'Identifier':
         match('Identifier')
-        parsePrimaryPrime()  # ✅ this is missing or broken in your current version
+        parsePrimaryPrime() 
     elif current_token == 'Integer':
         match('Integer')
     elif current_token == 'Real':
