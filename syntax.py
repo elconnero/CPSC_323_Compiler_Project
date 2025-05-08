@@ -1,8 +1,10 @@
+#new
 import sys
 import os
 from lexar_component import user_selection, read_source_file, queue_hub, lexer, operator_smasher
 from utils import get_base_dir
 from symbol_table import symbol_table
+from IGC import InstructionList
 
 # Global variables
 current_token = None
@@ -10,6 +12,7 @@ current_lexeme = None
 token_index = 0
 tokens = []
 result = True
+codegen: InstructionList
 
 # Debug switch
 debug = True
@@ -65,28 +68,41 @@ def parseRat25S():
         return result
 
 def run_parser_with_tokens(tok_list, filename):
-    global tokens, token_index, current_token, current_lexeme
+    global tokens, token_index, current_token, current_lexeme, codegen
+
     tokens = tok_list
     tokens.append(('EOF', 'EOF'))
     token_index = 0
     current_token = None
     current_lexeme = None
 
-    next_token() # Initializes first part of the token, like index = 1 token and lexeme got stuff loaded. 
+    # 2) create the emitter
+    codegen = InstructionList()
 
-    # Create parser output file in the base directory
+    next_token()  # prime the first token
+
+    # prepare your output file
     base_dir = get_base_dir()
     output_filename = os.path.join(
         base_dir,
         os.path.splitext(os.path.basename(filename))[0] + "_parser_output.txt"
     )
 
+    # 3) redirect stdout for _everything_ you want in that file:
     with open(output_filename, "w") as f:
         sys.stdout = f
+
+        # a) run the parser (which now calls codegen.emit internally)
         result = parseRat25S()
-        # Print symbol table at the end of parser output
+
+        # b) dump the assembled code
+        codegen.dump()
+
+        # c) finally, dump your symbol table
         symbol_table.print_table()
-        sys.stdout = sys.__stdout__ 
+
+        # restore
+        sys.stdout = sys.__stdout__
 
     return result, output_filename
 
@@ -272,6 +288,7 @@ def parseAssign():
     match('Identifier')
     match('OPERATOR')  # =
     parseExpression()
+    codegen.emit('POPM', addr)    
     match('SEPARATOR')  # ;
 
 def parseIf():
@@ -312,14 +329,36 @@ def parseReturn():
         match('SEPARATOR')
     else:
         parseExpression()
+        codegen.emit('RET')
         match('SEPARATOR')  # ;
 
 def parseScan():
     if debug:
         print("<Scan> -> scan ( <IDs> ) ;")
-    match('KEYWORD')  # scan
+
+    # match the “scan” keyword and the “(”
+    match('KEYWORD')    # scan
     match('SEPARATOR')  # (
-    parseIDs("integer", False)  # Not a declaration, just using variables
+
+    # --- handle the first identifier ---
+    identifier = current_lexeme
+    addr, _ = symbol_table.lookup(identifier)
+    if addr is None:
+        syntax_error(f"Undeclared identifier '{identifier}'")
+    match('Identifier')
+    codegen.emit('READ', addr)
+
+    # --- handle any additional comma-separated IDs ---
+    while current_lexeme == ',':
+        match('SEPARATOR')  # consume ','
+        identifier = current_lexeme
+        addr, _ = symbol_table.lookup(identifier)
+        if addr is None:
+            syntax_error(f"Undeclared identifier '{identifier}'")
+        match('Identifier')
+        codegen.emit('READ', addr)
+
+    # match the “)” and the trailing “;”
     match('SEPARATOR')  # )
     match('SEPARATOR')  # ;
 
@@ -329,6 +368,7 @@ def parsePrint():
     match('KEYWORD')  # print
     match('SEPARATOR')  # (
     parseExpression()  
+    codegen.emit('WRITE')
     match('SEPARATOR')  # )
     match('SEPARATOR')  # ;
 
@@ -357,8 +397,10 @@ def parseExpressionPrime():
     if current_lexeme in ['+', '-']:
         if debug:
             print("<Expression Prime> -> + <Term> <Expression Prime> | - <Term> <Expression Prime>")
+        op = current_lexeme
         match('OPERATOR')
         parseTerm()
+        codegen.emit('A' if op == '+' else 'S') #emit add or sub
         parseExpressionPrime()
     else:
         if debug:
@@ -374,8 +416,10 @@ def parseTermPrime():
     if current_lexeme in ['*', '/', '%']:
         if debug:
             print("<Term Prime> -> * <Factor> <Term Prime> | / <Factor> <Term Prime> | % <Factor> <Term Prime>")
+        op = current_lexeme
         match('OPERATOR')
         parseFactor()
+        codegen.emit('M' if op == '*' else ('D' if op == '/' else 'R'))
         parseTermPrime()
     else:
         if debug:
@@ -393,26 +437,38 @@ def parseFactor():
 def parsePrimary():
     if debug:
         print("<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )")
+
     if current_token == 'Identifier':
-        # Check if identifier exists in symbol table
-        addr, type_info = symbol_table.lookup(current_lexeme)
+        # look up the address in the symbol table
+        addr, _ = symbol_table.lookup(current_lexeme)
         if addr is None:
             print(f"Error: Variable '{current_lexeme}' not declared")
             syntax_error("Undeclared identifier")
+        # emit a PUSHM for this variable
+        codegen.emit('PUSHM', addr)
         match('Identifier')
-        parsePrimaryPrime() 
+        parsePrimaryPrime()
+
     elif current_token == 'Integer':
-        # Don't check symbol table for numeric literals
+        # emit a PUSHI for the literal value
+        codegen.emit('PUSHI', current_lexeme)
         match('Integer')
+
     elif current_token == 'Real':
-        # Don't allow real numbers in simplified version
+        # real not allowed in simplified version
         syntax_error("Real numbers not allowed in simplified version")
-    elif current_lexeme == 'true' or current_lexeme == 'false':
-        match('KEYWORD')  # assuming you classify booleans as keywords
+
+    elif current_lexeme in ('true', 'false'):
+        # for booleans you might choose to push 1/0
+        val = '1' if current_lexeme == 'true' else '0'
+        codegen.emit('PUSHI', val)
+        match('KEYWORD')
+
     elif current_lexeme == '(':
         match('SEPARATOR')  # (
         parseExpression()
         match('SEPARATOR')  # )
+
     else:
         syntax_error("Invalid primary")
 

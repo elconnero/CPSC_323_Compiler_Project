@@ -1,5 +1,68 @@
 <Rat25S> -> $$ <Opt Declaration List> $$ <Statement List> $$
 Matched: Token: SEPARATOR, Lexeme: $$
 <Opt Declaration List> -> <Declaration List> | epsilon
-<Opt Declaration List> -> epsilon
-Syntax Error: Expected SEPARATOR, but found KEYWORD ('function')
+<Declaration List> -> <Declaration> ; <Declaration List Prime>
+<Declaration> -> <Qualifier> <IDs>
+<Qualifier> -> integer | boolean
+Matched: Token: KEYWORD, Lexeme: integer
+<IDs> -> <Identifier> <IDs Prime>
+Matched: Token: Identifier, Lexeme: low
+<IDs Prime> -> , <Identifier> <IDs Prime>
+Matched: Token: SEPARATOR, Lexeme: ,
+Matched: Token: Identifier, Lexeme: high
+<IDs Prime> -> , <Identifier> <IDs Prime>
+Matched: Token: SEPARATOR, Lexeme: ,
+Matched: Token: Identifier, Lexeme: step
+<IDs Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Declaration List Prime> -> <Declaration> ; <Declaration List Prime>
+<Declaration> -> <Qualifier> <IDs>
+<Qualifier> -> integer | boolean
+Matched: Token: KEYWORD, Lexeme: boolean
+<IDs> -> <Identifier> <IDs Prime>
+Matched: Token: Identifier, Lexeme: baddie
+<IDs Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Declaration List Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: $$
+<Statement List> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Scan> -> scan ( <IDs> ) ;
+Matched: Token: KEYWORD, Lexeme: scan
+Matched: Token: SEPARATOR, Lexeme: (
+Matched: Token: Identifier, Lexeme: low
+Matched: Token: SEPARATOR, Lexeme: ,
+Matched: Token: Identifier, Lexeme: high
+Matched: Token: SEPARATOR, Lexeme: ,
+Matched: Token: Identifier, Lexeme: step
+Matched: Token: SEPARATOR, Lexeme: )
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> <Statement> <Statement List Prime>
+<Statement> -> <Assign> | <If> | <While> | <Return> | <Scan> | <Print> | <Block>
+<Assign> -> <Identifier> = <Expression> ;
+Matched: Token: Identifier, Lexeme: baddie
+Matched: Token: OPERATOR, Lexeme: =
+<Expression> -> <Term> <Expression Prime>
+<Term> -> <Factor> <Term Prime>
+<Factor> -> - <Primary> | <Primary>
+<Primary> -> <Identifier> | <Integer> | <Real> | ( <Expression> )
+Matched: Token: KEYWORD, Lexeme: true
+<Term Prime> -> epsilon
+<Expression Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: ;
+<Statement List Prime> -> epsilon
+Matched: Token: SEPARATOR, Lexeme: (
+; === Assembly Listing ===
+0001: READ 5000
+0002: READ 5001
+0003: READ 5002
+0004: PUSHI 1
+0005: POPM 5003
+; === End of Listing ===
+
+Symbol Table
+Identifier MemoryLocation Type
+baddie 5003 boolean
+high 5001 integer
+low 5000 integer
+step 5002 integer

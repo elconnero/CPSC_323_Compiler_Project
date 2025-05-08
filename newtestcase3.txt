@@ -1,29 +1,13 @@
 $$
-function convert (fahr integer)
-{
-           return 5*(fahr -32)/9;
-}
-
-function convertx (x real, y boolean)
-boolean  k, z;
-real     x;
-{ 
-    if (x > y) 
-       x = 1;
-    endif
-    if ( y  != z) 
-       x = 5;
-    else y = 123.45;
-    endif
-    return;
-}
+     integer low, high, step;
+     boolean baddie;
 $$
-     integer    low, high, step;
-$$
-     scan (low, high, step);
-     while (low  <=  high)
-        {  print (convertx(low) );
-           low = low + step;
-        } 
-      endwhile
+     scan(low, high, step);
+     baddie = true;   (* example boolean use *)
+     while (low <= high)
+     {
+         print(low);
+         low = low + step;
+     }
+     endwhile
 $$
