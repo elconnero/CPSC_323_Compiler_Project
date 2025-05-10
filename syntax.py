@@ -30,8 +30,9 @@ def load_tokens():
 # Move to the next token in the token list
 def next_token():
     global current_token, current_lexeme, token_index
-    if token_index < len(tokens):                                         #  tokens[token_index][1], ""[0]
-        current_token, current_lexeme = tokens[token_index][1], tokens[token_index][0]  # (example, "IDENTIFIER")
+    if token_index < len(tokens):
+        lexeme, tok_type = tokens[token_index]      # <-- note the order
+        current_token, current_lexeme = tok_type, lexeme
         token_index += 1
 
 # Match the current token with the expected token
@@ -53,12 +54,12 @@ def syntax_error(expected):
 # Start symbol for RAT25S grammar
 def parseRat25S():
     global result
-    print("<Rat25S> -> $$ <Opt Declaration List> $$ <Statement List> $$")
+    print("<Rat25S> -> $$ <Opt Function Definitions> $$ <Opt Declaration List> $$ <Statement List> $$")
     match('SEPARATOR') 
-
+    parseOptFunctionDefinitions()   
+    match('SEPARATOR')
     parseOptDeclarationList()
     match('SEPARATOR')  
-
     parseStatementList()
     match('SEPARATOR')  
 
@@ -123,6 +124,15 @@ def parseQualifier():
         match('KEYWORD')
     else:
         syntax_error("Qualifier (integer, boolean) expected")
+
+def parseOptFunctionDefinitions():
+    if debug:
+        print("<Opt Function Definitions> -> <Function Definitions> | epsilon")
+    if current_token == 'KEYWORD' and current_lexeme == 'function':
+        parseFunctionDefinitions()
+    else:
+        if debug:
+            print("<Opt Function Definitions> -> epsilon")
 
 def parseFunctionDefinitions():
     if debug:
@@ -320,12 +330,16 @@ def parseElse():
 def parseWhile():
     if debug:
         print("<While> -> while ( <Condition> ) <Statement> endwhile")
-    match('KEYWORD')  # while
-    match('SEPARATOR')  # (
-    parseCondition()
-    match('SEPARATOR')  # )
-    parseStatement()
-    match('KEYWORD')  # endwhile
+    match('KEYWORD'); match('SEPARATOR')   # while (
+    start_label = codegen.next_label
+    codegen.label()                        # reserve start
+    parseCondition(); match('SEPARATOR')   # condition )
+    end_label = codegen.next_label
+    codegen.emit('JMP0', end_label)        # if false jump out
+    parseStatement()                       # loop body
+    codegen.emit('JMP', start_label)       # back to start
+    codegen.label()                        # reserve end_label
+    match('KEYWORD')  
 
 def parseReturn():
     if debug:
@@ -339,44 +353,26 @@ def parseReturn():
         match('SEPARATOR')  # ;
 
 def parseScan():
-    if debug:
-        print("<Scan> -> scan ( <IDs> ) ;")
-
-    # match the "scan" keyword and the "("
-    match('KEYWORD')    # scan
-    match('SEPARATOR')  # (
-
-    # --- handle the first identifier ---
-    identifier = current_lexeme
-    addr, _ = symbol_table.lookup(identifier)
-    if addr is None:
-        syntax_error(f"Undeclared identifier '{identifier}'")
+    if debug: print("<Scan> -> scan ( <IDs> ) ;")
+    match('KEYWORD'); match('SEPARATOR')   # scan (
+    # first ID
+    addr, _ = symbol_table.lookup(current_lexeme)
     match('Identifier')
-    codegen.emit('READ', addr)
-
-    # --- handle any additional comma-separated IDs ---
+    codegen.emit('SIN'); codegen.emit('POPM', addr)
+    # any additional
     while current_lexeme == ',':
-        match('SEPARATOR')  # consume ','
-        identifier = current_lexeme
-        addr, _ = symbol_table.lookup(identifier)
-        if addr is None:
-            syntax_error(f"Undeclared identifier '{identifier}'")
+        match('SEPARATOR')
+        addr, _ = symbol_table.lookup(current_lexeme)
         match('Identifier')
-        codegen.emit('READ', addr)
-
-    # match the ")" and the trailing ";"
-    match('SEPARATOR')  # )
-    match('SEPARATOR')  # ;
+        codegen.emit('SIN'); codegen.emit('POPM', addr)
+    match('SEPARATOR'); match('SEPARATOR')  # ) ;
 
 def parsePrint():
-    if debug:
-        print("<Print> -> print ( <IDs> ) ;")
-    match('KEYWORD')  # print
-    match('SEPARATOR')  # (
-    parseExpression()  
-    codegen.emit('WRITE')
-    match('SEPARATOR')  # )
-    match('SEPARATOR')  # ;
+    if debug: print("<Print> -> print ( <Expression> ) ;")
+    match('KEYWORD'); match('SEPARATOR')   # print (
+    parseExpression()
+    codegen.emit('SOUT')
+    match('SEPARATOR'); match('SEPARATOR')  # ) ;
 
 def parseCondition():
     if debug:
@@ -386,12 +382,20 @@ def parseCondition():
     parseExpression()
 
 def parseRelop():
-    if debug:
-        print("<Relop> -> == | != | > | < | <= | =>")
-    if current_lexeme in ['==', '!=', '>', '<', '<=', '=>']:
+    if debug: print("<Relop> -> == | != | > | < | <= | >= ")
+    op = current_lexeme
+    # accept >= and <= first so they don’t get split into '>' + '='
+    if op in ('>=', '<=', '==', '!=', '>', '<'):
         match('OPERATOR')
     else:
         syntax_error("Relational operator expected")
+    
+    if op == '<':    codegen.emit('LES')
+    elif op == '<=': codegen.emit('LEQ')
+    elif op == '>':  codegen.emit('GRT')
+    elif op == '>=': codegen.emit('GEQ')
+    elif op == '==': codegen.emit('EQ')
+    elif op == '!=': codegen.emit('NEQ')
 
 def parseExpression():
     if debug:

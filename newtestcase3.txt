@@ -1,13 +1,54 @@
+[* Comprehensive opcode test *]
 $$
-     integer low, high, step;
-     boolean baddie;
+[* NO function definitions *]
 $$
-     scan(low, high, step);
-     baddie = true;   (* example boolean use *)
-     while (low <= high)
-     {
-         print(low);
-         low = low + step;
-     }
-     endwhile
+integer x, y, sum, diff, prod, quot;
+integer gt, lt, eq, neq, ge, le;
+integer i, loopSum;
+$$
+scan(x, y);
+
+sum  = x + y;
+print(sum);
+
+diff = x - y;
+print(diff);
+
+prod = x * y;
+print(prod);
+
+quot = x / y;
+print(quot);
+
+gt = 0;
+if (x > y) gt = 1; endif
+print(gt);
+
+lt = 0;
+if (x < y) lt = 1; endif
+print(lt);
+
+eq = 0;
+if (x == y) eq = 1; endif
+print(eq);
+
+neq = 0;
+if (x != y) neq = 1; endif
+print(neq);
+
+ge = 0;
+if (x >= y) ge = 1; endif
+print(ge);
+
+le = 0;
+if (x <= y) le = 1; endif
+print(le);
+
+i       = 5;
+loopSum = 0;
+while (i > 0) {
+    loopSum = loopSum + i;
+    i = i - 1;
+} endwhile
+print(loopSum);
 $$

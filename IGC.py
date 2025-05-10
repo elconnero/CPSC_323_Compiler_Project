@@ -26,15 +26,14 @@ class InstructionList:
         self.instructions.append((self.next_label, text))
         self.next_label += 1
 
+    def label(self):
+        """Reserve a label number without emitting any instruction text."""
+        self.next_label += 1
+
     def dump(self):
-        """
-        Print out the full assembly listing, one per line,
-        with zero-padded labels, followed by the symbol table.
-        """
-        print("; === Assembly Listing ===")
+        """Print each emitted instruction as: `<label> <instruction text>`."""
         for label, text in self.instructions:
-            print(f"{label:04}: {text}")
-        print("; === End of Listing ===")
+            print(f"{label} {text}")
 
 # Example usage (in main.py):
 # from codegen import InstructionList

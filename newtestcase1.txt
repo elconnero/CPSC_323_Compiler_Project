@@ -1,30 +1,15 @@
+[* this is comment for this sample code for assignment 3 *]
 $$
+[* NO function definitions *]
 $$
-integer x;
-integer y;
-integer z;
-real pi;
-real radius;
-real area;
+integer i, max, sum;  [* declarations *]
 $$
-x = 10;
-y = 20;
-z = x + y;
-pi = 3.14159;
-radius = 5.0;
-area = pi * radius * radius;
-x = x + 1;
-y = y - 5;
-z = x * y;
-x = z / 2;
-radius = radius + 1;
-area = area - 10.5;
-pi = pi * 2;
-x = 100;
-y = 200;
-z = x + y;
-radius = 10.0;
-area = pi * radius * radius;
+sum = 0;
+i = 1;
+scan(max);
+while (i < max) {
+    sum = sum + i;
+    i = i + 1;
+} endwhile
+print(sum + max);
 $$
-
-[*syntax test*]
