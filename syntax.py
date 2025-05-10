@@ -280,15 +280,21 @@ def parseStatement():
 def parseAssign():
     if debug:
         print("<Assign> -> <Identifier> = <Expression> ;")
-    identifier = current_lexeme
-    addr, type_info = symbol_table.lookup(identifier)
-    if addr is None:
-        print(f"Error: Variable '{identifier}' not declared")
-        syntax_error("Undeclared identifier")
+    
+    # Get the target variable's address
+    target_var = current_lexeme
+    target_addr, _ = symbol_table.lookup(target_var)
+    if target_addr is None:
+        syntax_error(f"Undeclared identifier '{target_var}'")
     match('Identifier')
     match('OPERATOR')  # =
+    
+    # Parse the expression which will leave its result on the stack
     parseExpression()
-    codegen.emit('POPM', addr)    
+    
+    # Pop the result into the target variable
+    codegen.emit('POPM', target_addr)
+    
     match('SEPARATOR')  # ;
 
 def parseIf():
@@ -336,7 +342,7 @@ def parseScan():
     if debug:
         print("<Scan> -> scan ( <IDs> ) ;")
 
-    # match the “scan” keyword and the “(”
+    # match the "scan" keyword and the "("
     match('KEYWORD')    # scan
     match('SEPARATOR')  # (
 
@@ -358,7 +364,7 @@ def parseScan():
         match('Identifier')
         codegen.emit('READ', addr)
 
-    # match the “)” and the trailing “;”
+    # match the ")" and the trailing ";"
     match('SEPARATOR')  # )
     match('SEPARATOR')  # ;
 
@@ -400,7 +406,11 @@ def parseExpressionPrime():
         op = current_lexeme
         match('OPERATOR')
         parseTerm()
-        codegen.emit('A' if op == '+' else 'S') #emit add or sub
+        # Emit the appropriate arithmetic operation
+        if op == '+':
+            codegen.emit('A')  # Add
+        else:
+            codegen.emit('S')  # Subtract
         parseExpressionPrime()
     else:
         if debug:
@@ -413,13 +423,17 @@ def parseTerm():
     parseTermPrime()
 
 def parseTermPrime():
-    if current_lexeme in ['*', '/', '%']:
+    if current_lexeme in ['*', '/']:
         if debug:
-            print("<Term Prime> -> * <Factor> <Term Prime> | / <Factor> <Term Prime> | % <Factor> <Term Prime>")
+            print("<Term Prime> -> * <Factor> <Term Prime> | / <Factor> <Term Prime>")
         op = current_lexeme
         match('OPERATOR')
         parseFactor()
-        codegen.emit('M' if op == '*' else ('D' if op == '/' else 'R'))
+        # Emit the appropriate arithmetic operation
+        if op == '*':
+            codegen.emit('M')  # Multiply
+        else:
+            codegen.emit('D')  # Divide
         parseTermPrime()
     else:
         if debug:
@@ -451,7 +465,7 @@ def parsePrimary():
 
     elif current_token == 'Integer':
         # emit a PUSHI for the literal value
-        codegen.emit('PUSHI', current_lexeme)
+        codegen.emit('PUSHI', int(current_lexeme))
         match('Integer')
 
     elif current_token == 'Real':
@@ -460,7 +474,7 @@ def parsePrimary():
 
     elif current_lexeme in ('true', 'false'):
         # for booleans you might choose to push 1/0
-        val = '1' if current_lexeme == 'true' else '0'
+        val = 1 if current_lexeme == 'true' else 0
         codegen.emit('PUSHI', val)
         match('KEYWORD')
 
@@ -476,9 +490,9 @@ def parsePrimaryPrime():
     if current_lexeme == '(':
         if debug:
             print("<Primary Prime> -> ( <IDs> )")
-        match('SEPARATOR')  # (
+        match('SEPARATOR')
         parseIDs("integer")  # Function parameters are always integers in simplified Rat24S
-        match('SEPARATOR')  # )
+        match('SEPARATOR')
     else:
         if debug:
             print("<Primary Prime> -> epsilon")
